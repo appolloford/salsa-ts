@@ -1,19 +1,76 @@
-import React from 'react';
+import { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { FileInput } from '@blueprintjs/core';
-import logo from './logo.svg';
+import script from './python/fitsreader.py';
 import './App.css';
+
+declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903)
+  interface Window {
+    pyodide: any;
+    jsarray: any;
+    loadPyodide: any;
+    // languagePluginLoader: any;
+  }
+}
+
+const initPyodidePromise = async () => {
+  const pyodide = window.pyodide || await window.loadPyodide({
+    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+  }).then(async (ins: any) => {
+    await ins.loadPackage("astropy")
+    return ins
+  });
+  // await pyodide.loadPackage("astropy")
+  window.pyodide = pyodide
+  return pyodide
+}
+
+const runScript = async (code: string) => {
+  // const pyodide = await window.loadPyodide({
+  //   indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+  // });
+  // await pyodide.loadPackage("astropy")
+  const pyodide = await initPyodidePromise();
+  await pyodide.runPythonAsync(code)
+  const content = pyodide.globals.get("fitsreader")
+  console.log("globals", content)
+
+  return content
+}
 
 function App() {
 
-  const readFile = (file: any) => {
+  const [plotdata, setPlotData] = useState([{}]);
+
+  const readFile = (file: File) => {
     const reader = new FileReader()
+
+    const getData = async () => {
+      const scriptText = await (await fetch(script)).text();
+      // console.log("script text", scriptText)
+      let content = await runScript(scriptText);
+      // console.log("content", content)
+      // console.log("header", content.header.toJs())
+      const xdata = content.axisdata(1).toJs()
+      const ydata = content.rawdata.toJs()[0][0]
+
+      setPlotData([{
+        x: xdata,
+        y: ydata,
+        type: 'scatter',
+        mode: 'lines+markers',
+      }])
+    }
 
     reader.onabort = () => console.log('file reading was aborted')
     reader.onerror = () => console.log('file reading has failed')
     reader.onload = () => {
-      const binaryStr = reader.result
-      console.log(binaryStr)
+      // Do whatever you want with the file contents
+      window.jsarray = new Float32Array(reader.result as ArrayBuffer);
+      // window.pyodide.loadPackage(['astropy']).then(() => {
+      //   getData();
+      // })
+      getData();
     }
     reader.readAsArrayBuffer(file)
   }
@@ -36,17 +93,8 @@ function App() {
       </form> */}
       <div>
         <Plot
-          data={[
-            {
-              x: [1, 2, 3],
-              y: [2, 6, 3],
-              type: 'scatter',
-              mode: 'lines+markers',
-              marker: { color: 'red' },
-            },
-            { type: 'bar', x: [1, 2, 3], y: [2, 5, 3] },
-          ]}
-          layout={{ width: 320, height: 240, title: 'A Fancy Plot' }}
+          data={plotdata}
+          layout={{ title: 'Spectrum' }}
         />
       </div>
     </div>
