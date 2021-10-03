@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Plot from 'react-plotly.js';
 import { FileInput } from '@blueprintjs/core';
+import Viewer from './components/Viewer';
 import script from './python/fitsreader.py';
 import './App.css';
 
@@ -13,15 +13,15 @@ declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903
   }
 }
 
-const initPyodidePromise = async () => {
+const pyodideInstance = async () => {
   const pyodide = window.pyodide || await window.loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
   }).then(async (ins: any) => {
     await ins.loadPackage("astropy")
+    window.pyodide = ins
     return ins
   });
   // await pyodide.loadPackage("astropy")
-  window.pyodide = pyodide
   return pyodide
 }
 
@@ -30,7 +30,7 @@ const runScript = async (code: string) => {
   //   indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
   // });
   // await pyodide.loadPackage("astropy")
-  const pyodide = await initPyodidePromise();
+  const pyodide = await pyodideInstance();
   await pyodide.runPythonAsync(code)
   const content = pyodide.globals.get("fitsreader")
   console.log("globals", content)
@@ -41,6 +41,7 @@ const runScript = async (code: string) => {
 function App() {
 
   const [plotdata, setPlotData] = useState([{}]);
+  const [plotlayout, setPlotLayout] = useState(Viewer.defaultProps.layout);
 
   const readFile = (file: File) => {
     const reader = new FileReader()
@@ -60,6 +61,12 @@ function App() {
         type: 'scatter',
         mode: 'lines+markers',
       }])
+
+      const newLayout = plotlayout
+      newLayout.title.text = file.name
+      newLayout.xaxis.title.text = content.header.toJs().get('CUNIT1')
+      newLayout.yaxis.title.text = content.header.toJs().get('BUNIT')
+      setPlotLayout(newLayout)
     }
 
     reader.onabort = () => console.log('file reading was aborted')
@@ -91,12 +98,7 @@ function App() {
         <input type="file" id="myFile" name="filename" />
         <input type="submit" />
       </form> */}
-      <div>
-        <Plot
-          data={plotdata}
-          layout={{ title: 'Spectrum' }}
-        />
-      </div>
+      <Viewer data={plotdata} layout={plotlayout} />
     </div>
   );
 }
