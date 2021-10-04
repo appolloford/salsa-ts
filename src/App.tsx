@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Plot from 'react-plotly.js';
 import { FileInput } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import script from './python/fitsreader.py';
@@ -14,23 +15,15 @@ declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903
 }
 
 const pyodideInstance = async () => {
-  const pyodide = window.pyodide || await window.loadPyodide({
+  const pyodide = await window.loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
-  }).then(async (ins: any) => {
-    await ins.loadPackage("astropy")
-    window.pyodide = ins
-    return ins
   });
+  await pyodide.loadPackage("astropy")
   // await pyodide.loadPackage("astropy")
   return pyodide
 }
 
-const runScript = async (code: string) => {
-  // const pyodide = await window.loadPyodide({
-  //   indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
-  // });
-  // await pyodide.loadPackage("astropy")
-  const pyodide = await pyodideInstance();
+const runScript = async (pyodide: any, code: string) => {
   await pyodide.runPythonAsync(code)
   const content = pyodide.globals.get("fitsreader")
   console.log("globals", content)
@@ -39,6 +32,19 @@ const runScript = async (code: string) => {
 }
 
 function App() {
+  const pyodideObj = useRef<any>(null);
+  const [loadPyodideOK, setLoadPyodideOK] = useState(false);
+  useEffect(() => {
+    async function init() {
+      if (!loadPyodideOK) {
+        pyodideObj.current = await pyodideInstance();
+        setLoadPyodideOK(true)
+      } else {
+        console.log("no duplicate reload to avoid pyodide error")
+      }
+    }
+    init()
+  }, [loadPyodideOK]);
 
   const [plotdata, setPlotData] = useState([{}]);
   const [plotlayout, setPlotLayout] = useState(Viewer.defaultProps.layout);
@@ -49,7 +55,7 @@ function App() {
     const getData = async () => {
       const scriptText = await (await fetch(script)).text();
       // console.log("script text", scriptText)
-      let content = await runScript(scriptText);
+      let content = await runScript(pyodideObj.current, scriptText);
       // console.log("content", content)
       // console.log("header", content.header.toJs())
       const xdata = content.axisdata(1).toJs()
