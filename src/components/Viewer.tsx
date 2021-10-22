@@ -2,9 +2,10 @@ import Plot from 'react-plotly.js';
 
 const Viewer = (props: any) => {
 
+  const fileName = props.fileName;
   const dataSource = props.dataSource;
   const unit = props.unit;
-  // const xaccuracy = props.xaccuracy;
+  const xPrecision = props.xPrecision;
   let order, xdisplayUnit;
 
   if (unit === "freq-k") {
@@ -16,6 +17,12 @@ const Viewer = (props: any) => {
   } else if (unit === "freq-g") {
     order = 9;
     xdisplayUnit = "GHz";
+  } else if (unit === "chan") {
+    order = 0;
+    xdisplayUnit = "Channel";
+  } else if (unit === "vel") {
+    order = 0;
+    xdisplayUnit = "Velocity (km/s)";
   } else {
     order = 0;
     xdisplayUnit = "Hz";
@@ -37,9 +44,11 @@ const Viewer = (props: any) => {
       mode: 'lines+markers',
     }];
 
-    // newLayout.title.text = file.name
+    plotLayout.title.text = fileName
     plotLayout.xaxis.title.text = xdisplayUnit;
     plotLayout.yaxis.title.text = header.get('BUNIT');
+
+    plotLayout.xaxis.tickformat = `.${xPrecision}r`;
 
   }
 

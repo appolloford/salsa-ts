@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FileInput, HTMLSelect } from '@blueprintjs/core';
+import { FileInput, HTMLSelect, Slider } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import readerDef from './python/fitsreader.py';
 import './App.css';
@@ -33,7 +33,9 @@ const runScript = async (pyodide: any, code: string) => {
 function App() {
   const pyodideObj = useRef<any>(null);
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
-  const [unit, setUnit] = useState("freq")
+  const [newFileName, setNewfileName] = useState("");
+  const [unit, setUnit] = useState("freq");
+  const [xPrecision, setXPrecision] = useState(6);
   useEffect(() => {
     async function init() {
       if (!loadPyodideOK) {
@@ -57,7 +59,8 @@ function App() {
     // const xdata = content.axisdata(1).toJs()
     // const ydata = content.rawdata.toJs()[0][0]
 
-    setDataSource(content)
+    setNewfileName(file.name);
+    setDataSource(content);
   }
 
   const readFile = (file: File) => {
@@ -92,9 +95,10 @@ function App() {
         <input type="file" id="myFile" name="filename" />
         <input type="submit" />
       </form> */}
-      <Viewer dataSource={dataSource} unit={unit} xaccuracy={3} />
+      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} xPrecision={xPrecision} />
       <div>
-        <HTMLSelect value={unit} onChange={(e) => { setUnit(e.target.value) }}>
+        x-axis unit:
+        <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
           <option value="freq">Frequency (Hz)</option>
           <option value="freq-k">Frequency (kHz)</option>
           <option value="freq-m">Frequency (MHz)</option>
@@ -102,6 +106,20 @@ function App() {
           <option value="chan">Channel</option>
           <option value="vel">Velocity (km/s)</option>
         </HTMLSelect>
+
+        <div style={{
+          display: 'block', width: 200, padding: 30
+        }}>
+          x-axis preciesion:
+          <Slider
+            min={0}
+            max={10}
+            stepSize={1}
+            labelStepSize={10}
+            onChange={(value) => { setXPrecision(value) }}
+            value={xPrecision}
+          />
+        </div>
       </div>
     </div>
   );
