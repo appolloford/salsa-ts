@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import Plot from 'react-plotly.js';
-import { FileInput } from '@blueprintjs/core';
+import { FileInput, HTMLSelect } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import readerDef from './python/fitsreader.py';
 import './App.css';
@@ -34,6 +33,7 @@ const runScript = async (pyodide: any, code: string) => {
 function App() {
   const pyodideObj = useRef<any>(null);
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
+  const [unit, setUnit] = useState("freq")
   useEffect(() => {
     async function init() {
       if (!loadPyodideOK) {
@@ -44,32 +44,20 @@ function App() {
       }
     }
     init()
-  }, []);
+  });
 
-  const [plotdata, setPlotData] = useState([{}]);
-  const [plotlayout, setPlotLayout] = useState(Viewer.defaultProps.layout);
+  const [dataSource, setDataSource] = useState();
 
   const getData = async (file: File) => {
     const script = await (await fetch(readerDef)).text();
     // console.log("script text", scriptText)
-    let content = await runScript(pyodideObj.current, script);
+    const content = await runScript(pyodideObj.current, script);
     // console.log("content", content)
     // console.log("header", content.header.toJs())
-    const xdata = content.axisdata(1).toJs()
-    const ydata = content.rawdata.toJs()[0][0]
+    // const xdata = content.axisdata(1).toJs()
+    // const ydata = content.rawdata.toJs()[0][0]
 
-    setPlotData([{
-      x: xdata,
-      y: ydata,
-      type: 'scatter',
-      mode: 'lines+markers',
-    }])
-
-    const newLayout = plotlayout
-    newLayout.title.text = file.name
-    newLayout.xaxis.title.text = content.header.toJs().get('CUNIT1')
-    newLayout.yaxis.title.text = content.header.toJs().get('BUNIT')
-    setPlotLayout(newLayout)
+    setDataSource(content)
   }
 
   const readFile = (file: File) => {
@@ -104,7 +92,17 @@ function App() {
         <input type="file" id="myFile" name="filename" />
         <input type="submit" />
       </form> */}
-      <Viewer data={plotdata} layout={plotlayout} />
+      <Viewer dataSource={dataSource} unit={unit} xaccuracy={3} />
+      <div>
+        <HTMLSelect value={unit} onChange={(e) => { setUnit(e.target.value) }}>
+          <option value="freq">Frequency (Hz)</option>
+          <option value="freq-k">Frequency (kHz)</option>
+          <option value="freq-m">Frequency (MHz)</option>
+          <option value="freq-g">Frequency (GHz)</option>
+          <option value="chan">Channel</option>
+          <option value="vel">Velocity (km/s)</option>
+        </HTMLSelect>
+      </div>
     </div>
   );
 }

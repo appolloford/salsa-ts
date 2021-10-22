@@ -20,7 +20,7 @@ class FitsReader:
     def rawdata(self) -> list:
         return self.content[0].data.tolist()
 
-    def axisdata(self, idx: int, unit: str = None) -> list:
+    def axisdata(self, idx: int, unit: str = None, order: int = 0) -> list:
         if idx > self.header.get("NAXIS"):
             raise RuntimeError(f"Input index {idx} is higher than the dimension")
 
@@ -51,7 +51,7 @@ class FitsReader:
                 else:
                     raise RuntimeError(f"{cunit} cannot be converted to {unit}")
 
-        return ret
+        return np.array(ret) / 10**order
 
 
 # if __name__ == "__main__":
