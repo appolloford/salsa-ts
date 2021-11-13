@@ -1,16 +1,14 @@
 import { useRef, useState } from 'react';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
-import HC_exporting from 'highcharts/modules/exporting';
+// import HighchartsReact from 'highcharts-react-official';
 import { Button, HTMLTable } from "@blueprintjs/core";
+import Canvas from './Canvas';
 
-HC_exporting(Highcharts);
 
 const Viewer = (props: any) => {
-  const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
+  // const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
-  const [baselinePoints, setBaselinePoints] = useState([[1, 2], [3, 4]]);
+  const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
 
   const getCursorPos = (chart: any, event: any) => {
     let xvalue = 0.0;
@@ -35,9 +33,9 @@ const Viewer = (props: any) => {
     return { xvalue, yvalue };
   }
 
-  const handleMouseMove = (event: any) => {
+  const handleMouseMove = (event: any, chart: any) => {
     // const chart = event.target.series.chart;
-    const chart = chartComponentRef.current?.chart;
+    // const chart = chartComponentRef.current?.chart;
     // console.log(chart);
     // console.log(event);
     // console.log(Highcharts);
@@ -55,8 +53,8 @@ const Viewer = (props: any) => {
     setBaselinePoints([...baselinePoints, point]);
   };
 
-  const handleDoubleClick = (event: any, callback: Function) => {
-    const chart = chartComponentRef.current?.chart;
+  const handleDoubleClick = (event: any, chart: any, callback: Function) => {
+    // const chart = chartComponentRef.current?.chart;
     const { xvalue, yvalue } = getCursorPos(chart, event);
     callback([xvalue, yvalue]);
   };
@@ -88,7 +86,22 @@ const Viewer = (props: any) => {
     xdisplayUnit = "Hz";
   }
 
-  const newOptions = props.options;
+  const options: Highcharts.Options = {
+    chart: {
+      zoomType: 'x'
+    },
+    tooltip: {
+      enabled: true
+    },
+    plotOptions: {
+      series: {
+        enableMouseTracking: true,
+        tooltip: {
+          followPointer: false
+        },
+      },
+    },
+  };
 
   if (dataSource) {
 
@@ -101,12 +114,18 @@ const Viewer = (props: any) => {
       return [xi, ydata[i]];
     });
 
-    const plotData = [{
-      type: 'line',
-      data: seriesData,
-    }];
-
-    newOptions.series = plotData;
+    options.series = [
+      {
+        name: fileName,
+        type: 'line',
+        data: seriesData,
+      },
+      {
+        name: "Baseline",
+        type: "scatter",
+        data: baselinePoints,
+      }
+    ];
 
     const xAxis = {
       title: {
@@ -122,9 +141,8 @@ const Viewer = (props: any) => {
       }
     };
 
-    newOptions.title.text = fileName
-    newOptions.xAxis = xAxis;
-    newOptions.yAxis = yAxis;
+    options.xAxis = xAxis;
+    options.yAxis = yAxis;
 
     // plotLayout.xaxis.tickformat = `.${xPrecision}r`;
 
@@ -132,15 +150,10 @@ const Viewer = (props: any) => {
 
   return (
     <>
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={newOptions}
-        ref={chartComponentRef}
-        containerProps={{
-          onMouseMove: handleMouseMove,
-          onDoubleClick: (event: any) => { handleDoubleClick(event, addBaselinePoints) }
-        }}
-        {...props}
+      <Canvas
+        options={options}
+        onMouseMove={handleMouseMove}
+        onDoubleClick={(event: any, chart: any) => { handleDoubleClick(event, chart, addBaselinePoints) }}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
       <div>
@@ -170,26 +183,5 @@ const Viewer = (props: any) => {
   );
 }
 
-Viewer.defaultProps = {
-  options: {
-    title: {
-      text: 'My chart'
-    },
-    chart: {
-      zoomType: 'x'
-    },
-    tooltip: {
-      enabled: true
-    },
-    plotOptions: {
-      series: {
-        enableMouseTracking: true,
-        tooltip: {
-          followPointer: false
-        },
-      },
-    },
-  }
-}
 
 export default Viewer;
