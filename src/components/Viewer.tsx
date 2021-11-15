@@ -1,64 +1,39 @@
 import { useRef, useState } from 'react';
-// import HighchartsReact from 'highcharts-react-official';
 import { Button, HTMLTable } from "@blueprintjs/core";
 import Canvas from './Canvas';
+import BaselineTable from './BaselineTable';
 
 
 const Viewer = (props: any) => {
-  // const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
 
-  const getCursorPos = (chart: any, event: any) => {
-    let xvalue = 0.0;
-    let yvalue = 0.0;
-    if (chart) {
-      const e = chart.pointer.normalize(event);
-      const x = e.chartX - chart.plotLeft;
-      const y = e.chartY - chart.plotTop;
-      // const top = chart.container.offsetTop;
-      // const left = chart.container.offsetLeft;
-      // const x = event.clientX - chart.plotLeft - left;
-      // const y = event.clientY - chart.plotTop - top;
-      if (x >= 0 && y >= 0 && x <= chart.chartWidth && y <= chart.chartHeight) {
-        // console.log(chart.xAxis[0].toValue(x, true));
-        // console.log(chart.yAxis[0].toValue(chart.plotHeight - y, true));
-        // setCursorX(chart.xAxis[0].toValue(x, true));
-        // setCursorY(chart.yAxis[0].toValue(y, true));
-        xvalue = chart.xAxis[0].toValue(x, true);
-        yvalue = chart.yAxis[0].toValue(y, true);
-      }
-    }
-    return { xvalue, yvalue };
-  }
-
-  const handleMouseMove = (event: any, chart: any) => {
-    // const chart = event.target.series.chart;
-    // const chart = chartComponentRef.current?.chart;
-    // console.log(chart);
-    // console.log(event);
-    // console.log(Highcharts);
-    // console.log(chartComponentRef);
-    // console.log(event.target);
-    // console.log(event.target.tooltipPos);
-
-    const { xvalue, yvalue } = getCursorPos(chart, event);
-    setCursorX(xvalue);
-    setCursorY(yvalue);
-
+  const displayCursorPos = (x: number, y: number) => {
+    setCursorX(x);
+    setCursorY(y);
   };
 
   const addBaselinePoints = (point: Array<number>) => {
     setBaselinePoints([...baselinePoints, point]);
   };
 
-  const handleDoubleClick = (event: any, chart: any, callback: Function) => {
-    // const chart = chartComponentRef.current?.chart;
-    const { xvalue, yvalue } = getCursorPos(chart, event);
-    callback([xvalue, yvalue]);
-  };
-
+  // TODO: update table when drag and drop
+  // const updateBaselinePoints = (oldPoint: Array<number>, newPoint: Array<number>) => {
+  //   // console.log("update", oldPoint, newPoint);
+  //   // const test = baselinePoints.map((x, i) => [i, x]);
+  //   // console.log("test", test)
+  //   // const targetIdx = baselinePoints.filter((ele) => {
+  //   //   console.log("filter", ele)
+  //   //   return ele[0] === oldPoint[0] && ele[1] === oldPoint[1]
+  //   // });
+  //   // console.log("idx:", targetIdx);
+  //   console.log("a", baselinePoints);
+  //   setBaselinePoints([...baselinePoints]);
+  //   console.log("b", baselinePoints);
+  //   // setBaselinePoints(baselinePoints[baselinePoints.map((x, i) => [i, x]).filter(
+  //   //   x => x[1] == point)[0][0]] = point);
+  // }
 
   const fileName = props.fileName;
   const dataSource = props.dataSource;
@@ -97,11 +72,13 @@ const Viewer = (props: any) => {
       series: {
         enableMouseTracking: true,
         tooltip: {
-          followPointer: false
+          followPointer: false,
         },
       },
     },
   };
+
+  let sourceData: number[][] = [];
 
   if (dataSource) {
 
@@ -110,22 +87,26 @@ const Viewer = (props: any) => {
     const header = dataSource.header.toJs();
 
     const xdataArray = [].slice.call(xdata);
-    const seriesData = xdataArray.map((xi: number, i: number) => {
+    sourceData = xdataArray.map((xi: number, i: number) => {
       return [xi, ydata[i]];
     });
 
-    options.series = [
-      {
-        name: fileName,
-        type: 'line',
-        data: seriesData,
-      },
-      {
-        name: "Baseline",
-        type: "scatter",
-        data: baselinePoints,
-      }
-    ];
+    // options.series = [
+    //   {
+    //     name: "Observation",
+    //     type: 'line',
+    //     data: sourceData,
+    //   },
+    //   {
+    //     name: "Baseline",
+    //     type: "scatter",
+    //     data: baselinePoints,
+    //     dragDrop: {
+    //       draggableX: true,
+    //       draggableY: true
+    //     },
+    //   }
+    // ];
 
     const xAxis = {
       title: {
@@ -151,9 +132,12 @@ const Viewer = (props: any) => {
   return (
     <>
       <Canvas
+        source={sourceData}
+        baseline={baselinePoints}
         options={options}
-        onMouseMove={handleMouseMove}
-        onDoubleClick={(event: any, chart: any) => { handleDoubleClick(event, chart, addBaselinePoints) }}
+        onMouseMove={displayCursorPos}
+        onDoubleClick={addBaselinePoints}
+      // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
       <div>
@@ -167,7 +151,8 @@ const Viewer = (props: any) => {
             </tr>
           </thead>
           <tbody>
-            {baselinePoints.map(item => {
+            <BaselineTable baseline={baselinePoints} />
+            {/* {baselinePoints.map(item => {
               return (
                 <tr key={item[0]} onClick={() => { console.log("click table") }}>
                   <td>{item[0]}</td>
@@ -175,7 +160,7 @@ const Viewer = (props: any) => {
                   <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td>
                 </tr>
               );
-            })}
+            })} */}
           </tbody>
         </HTMLTable>
       </div>
