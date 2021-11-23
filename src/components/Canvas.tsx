@@ -23,11 +23,16 @@ const Canvas = (props: any) => {
     {
       name: "Baseline",
       type: "scatter",
-      data: props.baseline,
+      data: props.baselinePoints,
       dragDrop: {
         draggableX: true,
         draggableY: true
       },
+    },
+    {
+      name: 'Baseline fitting',
+      type: 'line',
+      data: props.baselineData,
     }
   ];
 

@@ -8,6 +8,7 @@ const Viewer = (props: any) => {
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
+  const [baselineData, setBaselineData] = useState<number[][]>([])
 
   const displayCursorPos = (x: number, y: number) => {
     setCursorX(x);
@@ -78,6 +79,18 @@ const Viewer = (props: any) => {
     },
   };
 
+  const getBaselineFit = (points: number[][]) => {
+    const xdata = points.map((item: number[]) => { return item[0] });
+    const ydata = points.map((item: number[]) => { return item[1] });
+    const result = dataSource?.fit_baseline_point(xdata, ydata).toJs() || baselinePoints;
+    // make Float64Array to Array
+    const data = result.map((item: number[]) => {
+      return [item[0], item[1]]
+    })
+    console.log(data)
+    setBaselineData(data);
+  }
+
   let sourceData: number[][] = [];
 
   if (dataSource) {
@@ -133,7 +146,8 @@ const Viewer = (props: any) => {
     <>
       <Canvas
         source={sourceData}
-        baseline={baselinePoints}
+        baselinePoints={baselinePoints}
+        baselineData={baselineData}
         options={options}
         onMouseMove={displayCursorPos}
         onDoubleClick={addBaselinePoints}
@@ -163,6 +177,7 @@ const Viewer = (props: any) => {
             })} */}
           </tbody>
         </HTMLTable>
+        <Button text="Fit Baseline" onClick={() => { getBaselineFit(baselinePoints) }} />
       </div>
     </>
   );

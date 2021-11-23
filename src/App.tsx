@@ -24,7 +24,7 @@ const pyodideInstance = async () => {
 
 const runScript = async (pyodide: any, code: string) => {
   await pyodide.runPythonAsync(code)
-  const content = pyodide.globals.get("fitsreader")
+  const content = pyodide.globals.get("salsa")
   console.log("globals", content)
 
   return content

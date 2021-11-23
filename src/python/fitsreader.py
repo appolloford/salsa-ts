@@ -2,14 +2,18 @@ import numpy as np
 
 from io import BytesIO
 from js import jsarray
+
 from astropy.io import fits
+# from scipy.optimize import curve_fit
+# #? fit gaussian: https://stackoverflow.com/questions/11507028/fit-a-gaussian-function
 
 clight = 299792458
 
 
-class FitsReader:
+class SALSASource:
     def __init__(self, bytesfile) -> None:
         self.content = fits.open(BytesIO(bytesfile), mode="readonly")
+        self._baseline = None
 
     @property
     def header(self) -> dict:
@@ -53,6 +57,19 @@ class FitsReader:
 
         return np.array(ret) / 10**order
 
+    @property
+    def baseline(self) -> dict[float, float]:
+        return self._baseline
+
+    def fit_baseline_point(self, xdata: list[float], ydata: list[float], unit: str=None, deg: float = 2) -> None:
+        poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
+        x = self.axisdata(1, unit=unit)
+        y = np.polyval(poly, x)
+        # self._baseline = {xi: yi for xi, yi in zip(x, y)}
+        self._baseline = np.array([[xi, yi] for xi, yi in zip(x, y)])
+        #? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
+        return self._baseline
+
 
 # if __name__ == "__main__":
 #     array = jsarray.to_py().tobytes()
@@ -61,5 +78,5 @@ class FitsReader:
 #     FitsReader(array)
 
 array = jsarray.to_py().tobytes()
-fitsreader = FitsReader(array)
+salsa = SALSASource(array)
 # FitsReader(array)
