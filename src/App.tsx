@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FileInput, HTMLSelect, Slider } from '@blueprintjs/core';
+import { FileInput, HTMLSelect, Slider, Switch } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import readerDef from './python/fitsreader.py';
 import './App.css';
@@ -34,6 +34,7 @@ function App() {
   const pyodideObj = useRef<any>(null);
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
   const [newFileName, setNewfileName] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
   const [unit, setUnit] = useState("freq");
   const [xPrecision, setXPrecision] = useState(6);
   useEffect(() => {
@@ -95,7 +96,8 @@ function App() {
         <input type="file" id="myFile" name="filename" />
         <input type="submit" />
       </form> */}
-      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} xPrecision={xPrecision} />
+      <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} />
+      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} xPrecision={xPrecision} selectMode={selectMode} />
       <div>
         x-axis unit:
         <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>

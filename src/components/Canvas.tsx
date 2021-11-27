@@ -14,27 +14,105 @@ const Canvas = (props: any) => {
 
   const options = props.options;
 
+  const selectPointsByDrag = (e: any) => {
+
+    // const chart = chartComponentRef.current?.chart;
+
+    console.log(e)
+    console.log(chart)
+    console.log("chart option", chart?.options)
+
+    if (chart?.series) {
+      chart.series.forEach(
+        (series: any) => {
+          series?.points.forEach(
+            (point: any) => {
+              if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
+                point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
+                point.select(true, true);
+              }
+            }
+          )
+        }
+      )
+    }
+
+    console.log(chart?.getSelectedPoints())
+
+    const data = chart?.getSelectedPoints().map(
+      (point) => { return [point.x, point.y] }
+    )
+
+    props.onSelect(data)
+
+    console.log(data)
+
+    // Fire a custom event
+    // console.log("highchart", Highcharts);
+    // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
+
+    return false; // Don't zoom
+  }
+
+  function unselectByClick() {
+    const points = chart?.getSelectedPoints();
+    if (points?.length && points.length > 0) {
+      points.forEach((point) => {
+        point.select(false);
+      })
+    }
+    props.onSelect([]);
+  }
+
+  if (props.selectMode === true) {
+    options.chart.zoomType = 'xy';
+    options.chart.events = {
+      selection: selectPointsByDrag,
+      click: unselectByClick,
+    };
+  }
+  else {
+    options.chart.zoomType = 'x';
+    options.chart.events = {
+      selection: undefined,
+      click: undefined,
+      render: undefined,
+    }
+  }
+
   options.series = [
     {
-      name: "Observation",
-      type: 'line',
+      name: 'Observation',
+      type: 'scatter',
       data: props.source,
+      allowPointSelect: props.selectMode,
+      findNearestPointBy: 'xy',
     },
-    {
-      name: "Baseline",
-      type: "scatter",
-      data: props.baselinePoints,
-      dragDrop: {
-        draggableX: true,
-        draggableY: true
-      },
-    },
-    {
+    // {
+    //   name: "Baseline",
+    //   type: "scatter",
+    //   data: props.baselinePoints,
+    //   dragDrop: {
+    //     draggableX: true,
+    //     draggableY: true
+    //   },
+    // },
+    // {
+    //   name: 'Baseline fitting',
+    //   type: 'line',
+    //   data: props.baselineData,
+    // }
+  ];
+
+  if (props.baselineData) {
+    options.series.push({
       name: 'Baseline fitting',
       type: 'line',
       data: props.baselineData,
-    }
-  ];
+    })
+  }
+
+  console.log("options", options)
 
   const getCursorPos = (event: any) => {
     let xPos = 0.0;
@@ -79,6 +157,9 @@ const Canvas = (props: any) => {
   };
 
   options.plotOptions = {
+    scatter: {
+      lineWidth: 2
+    },
     series: {
       enableMouseTracking: true,
       tooltip: {

@@ -64,7 +64,7 @@ const Viewer = (props: any) => {
 
   const options: Highcharts.Options = {
     chart: {
-      zoomType: 'x'
+      zoomType: 'x',
     },
     tooltip: {
       enabled: true
@@ -109,6 +109,7 @@ const Viewer = (props: any) => {
     //     name: "Observation",
     //     type: 'line',
     //     data: sourceData,
+    //     allowPointSelect: props.selectMode,
     //   },
     //   {
     //     name: "Baseline",
@@ -146,25 +147,27 @@ const Viewer = (props: any) => {
     <>
       <Canvas
         source={sourceData}
-        baselinePoints={baselinePoints}
+        // baselinePoints={baselinePoints}
         baselineData={baselineData}
         options={options}
         onMouseMove={displayCursorPos}
         onDoubleClick={addBaselinePoints}
+        selectMode={props.selectMode}
+        onSelect={setBaselinePoints}
       // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
       <div>
         <HTMLTable striped={true} interactive={true} condensed={true}>
           <caption>baseline fitting points</caption>
-          <thead>
+          <thead style={{ display: "table" }}>
             <tr>
-              <th>X coordinate</th>
-              <th>Y coordinate</th>
-              <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th>
+              <th style={{ width: 140 }}>X coordinate</th>
+              <th style={{ width: 140 }}>Y coordinate</th>
+              {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
             <BaselineTable baseline={baselinePoints} />
             {/* {baselinePoints.map(item => {
               return (
