@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FileInput, HTMLSelect, Slider, Switch } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
-import readerDef from './python/fitsreader.py';
+import salsaSourceDef from './python/salsasource.py';
 import './App.css';
 
 declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903)
@@ -51,7 +51,7 @@ function App() {
   const [dataSource, setDataSource] = useState();
 
   const getData = async (file: File) => {
-    const script = await (await fetch(readerDef)).text();
+    const script = await (await fetch(salsaSourceDef)).text();
     // console.log("script text", scriptText)
     const content = await runScript(pyodideObj.current, script);
     // console.log("content", content)
