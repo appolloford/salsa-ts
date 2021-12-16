@@ -34,7 +34,6 @@ function App() {
   const pyodideObj = useRef<any>(null);
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
   const [newFileName, setNewfileName] = useState("");
-  const [selectMode, setSelectMode] = useState(false);
   const [unit, setUnit] = useState("freq");
   const [xPrecision, setXPrecision] = useState(6);
   useEffect(() => {
@@ -96,33 +95,7 @@ function App() {
         <input type="file" id="myFile" name="filename" />
         <input type="submit" />
       </form> */}
-      <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} />
-      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} xPrecision={xPrecision} selectMode={selectMode} />
-      <div>
-        x-axis unit:
-        <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
-          <option value="freq">Frequency (Hz)</option>
-          <option value="freq-k">Frequency (kHz)</option>
-          <option value="freq-m">Frequency (MHz)</option>
-          <option value="freq-g">Frequency (GHz)</option>
-          <option value="chan">Channel</option>
-          <option value="vel">Velocity (km/s)</option>
-        </HTMLSelect>
-
-        <div style={{
-          display: 'block', width: 200, padding: 30
-        }}>
-          x-axis preciesion:
-          <Slider
-            min={0}
-            max={10}
-            stepSize={1}
-            labelStepSize={10}
-            onChange={(value) => { setXPrecision(value) }}
-            value={xPrecision}
-          />
-        </div>
-      </div>
+      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} setUnit={setUnit} xPrecision={xPrecision} />
     </div>
   );
 }

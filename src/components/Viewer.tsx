@@ -7,6 +7,7 @@ import Panels from './Panels';
 const Viewer = (props: any) => {
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
+  const [selectMode, setSelectMode] = useState(false);
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
   const [baselineData, setBaselineData] = useState<number[][]>([])
 
@@ -39,6 +40,7 @@ const Viewer = (props: any) => {
   const fileName = props.fileName;
   const dataSource = props.dataSource;
   const unit = props.unit;
+  const setUnit = props.setUnit;
   const xPrecision = props.xPrecision;
   let order, xdisplayUnit;
 
@@ -161,12 +163,19 @@ const Viewer = (props: any) => {
         options={options}
         onMouseMove={displayCursorPos}
         onDoubleClick={addBaselinePoints}
-        selectMode={props.selectMode}
+        selectMode={selectMode}
         onSelect={setBaselinePoints}
       // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
-      <Panels baselinePoints={baselinePoints} getBaselineFit={getBaselineFit} />
+      <Panels
+        unit={unit}
+        setUnit={setUnit}
+        selectMode={selectMode}
+        setSelectMode={setSelectMode}
+        baselinePoints={baselinePoints}
+        getBaselineFit={getBaselineFit}
+      />
     </>
   );
 }
