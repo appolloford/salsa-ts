@@ -14,6 +14,8 @@ const Canvas = (props: any) => {
 
   const options = props.options;
 
+  const setBaselinePoints = props.onSelect;
+
   const selectPointsByDrag = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -43,7 +45,7 @@ const Canvas = (props: any) => {
       (point) => { return [point.x, point.y] }
     )
 
-    props.onSelect(data)
+    setBaselinePoints(data)
 
     console.log(data)
 
@@ -61,7 +63,7 @@ const Canvas = (props: any) => {
         point.select(false);
       })
     }
-    props.onSelect([]);
+    setBaselinePoints([]);
   }
 
   if (props.selectMode === true) {

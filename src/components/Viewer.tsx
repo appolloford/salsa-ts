@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button, HTMLTable } from "@blueprintjs/core";
 import Canvas from './Canvas';
-import BaselineTable from './BaselineTable';
+import Panels from './Panels';
 
 
 const Viewer = (props: any) => {
@@ -79,10 +79,19 @@ const Viewer = (props: any) => {
     },
   };
 
+  const clearBaselineData = () => { setBaselineData([]) };
+
   const getBaselineFit = (points: number[][]) => {
+
+    console.log("get fits point", points);
+    if (points.length === 0) {
+      clearBaselineData();
+      return;
+    }
+
     const xdata = points.map((item: number[]) => { return item[0] });
     const ydata = points.map((item: number[]) => { return item[1] });
-    const result = dataSource?.fit_baseline_point(xdata, ydata).toJs() || baselinePoints;
+    const result = dataSource?.fit_baseline_point(xdata, ydata, unit).toJs() || baselinePoints;
     // make Float64Array to Array
     const data = result.map((item: number[]) => {
       return [item[0], item[1]]
@@ -157,31 +166,7 @@ const Viewer = (props: any) => {
       // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
-      <div>
-        <HTMLTable striped={true} interactive={true} condensed={true}>
-          <caption>baseline fitting points</caption>
-          <thead style={{ display: "table" }}>
-            <tr>
-              <th style={{ width: 140 }}>X coordinate</th>
-              <th style={{ width: 140 }}>Y coordinate</th>
-              {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
-            </tr>
-          </thead>
-          <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
-            <BaselineTable baseline={baselinePoints} />
-            {/* {baselinePoints.map(item => {
-              return (
-                <tr key={item[0]} onClick={() => { console.log("click table") }}>
-                  <td>{item[0]}</td>
-                  <td>{item[1]}</td>
-                  <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td>
-                </tr>
-              );
-            })} */}
-          </tbody>
-        </HTMLTable>
-        <Button text="Fit Baseline" onClick={() => { getBaselineFit(baselinePoints) }} />
-      </div>
+      <Panels baselinePoints={baselinePoints} getBaselineFit={getBaselineFit} />
     </>
   );
 }
