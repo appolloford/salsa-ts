@@ -1,6 +1,5 @@
 const BaselineTable = (props: any) => {
 
-  console.log("table", props.baseline);
   const baseline = props.baseline;
 
   return (

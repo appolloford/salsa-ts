@@ -8,8 +8,10 @@ const Viewer = (props: any) => {
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
   const [selectMode, setSelectMode] = useState(false);
+
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
   const [baselineData, setBaselineData] = useState<number[][]>([])
+  const [showSubtraction, setShowSubtraction] = useState(false);
 
   const displayCursorPos = (x: number, y: number) => {
     setCursorX(x);
@@ -165,6 +167,7 @@ const Viewer = (props: any) => {
         onDoubleClick={addBaselinePoints}
         selectMode={selectMode}
         onSelect={setBaselinePoints}
+        showSubtraction={showSubtraction}
       // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
@@ -175,6 +178,8 @@ const Viewer = (props: any) => {
         setSelectMode={setSelectMode}
         baselinePoints={baselinePoints}
         getBaselineFit={getBaselineFit}
+        showSubtraction={showSubtraction}
+        setShowSubtraction={setShowSubtraction}
       />
     </>
   );

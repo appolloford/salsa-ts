@@ -16,6 +16,8 @@ const Canvas = (props: any) => {
 
   const setBaselinePoints = props.onSelect;
 
+  const showSubtraction = props.showSubtraction;
+
   const selectPointsByDrag = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -39,15 +41,11 @@ const Canvas = (props: any) => {
       )
     }
 
-    console.log(chart?.getSelectedPoints())
-
     const data = chart?.getSelectedPoints().map(
       (point) => { return [point.x, point.y] }
     )
 
     setBaselinePoints(data)
-
-    console.log(data)
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -82,36 +80,61 @@ const Canvas = (props: any) => {
     }
   }
 
-  options.series = [
-    {
-      name: 'Observation',
-      type: 'scatter',
-      data: props.source,
-      allowPointSelect: props.selectMode,
-      findNearestPointBy: 'xy',
-    },
-    // {
-    //   name: "Baseline",
-    //   type: "scatter",
-    //   data: props.baselinePoints,
-    //   dragDrop: {
-    //     draggableX: true,
-    //     draggableY: true
-    //   },
-    // },
-    // {
-    //   name: 'Baseline fitting',
-    //   type: 'line',
-    //   data: props.baselineData,
-    // }
-  ];
+  if (showSubtraction === true) {
+    const subtractedData = props.source.map(
+      (pos: Array<number>, idx: number) => {
+        const baselinePoint = props.baselineData[idx] || [0.0, 0.0];
+        return [pos[0], pos[1] - baselinePoint[1]]
+      }
+    )
+    options.series = [
+      {
+        name: 'Observation - Baseline',
+        type: 'scatter',
+        data: subtractedData,
+        allowPointSelect: props.selectMode,
+        findNearestPointBy: 'xy',
+      },
+    ];
+  }
+  else {
+    options.series = [
+      {
+        name: 'Observation',
+        type: 'scatter',
+        data: props.source,
+        allowPointSelect: props.selectMode,
+        findNearestPointBy: 'xy',
+      },
+      // {
+      //   name: "Baseline",
+      //   type: "scatter",
+      //   data: props.baselinePoints,
+      //   dragDrop: {
+      //     draggableX: true,
+      //     draggableY: true
+      //   },
+      // },
+    ];
 
-  if (props.baselineData) {
-    options.series.push({
-      name: 'Baseline fitting',
-      type: 'line',
-      data: props.baselineData,
-    })
+    if (props.baselineData) {
+      // options.series = [
+      //   ...options.series,
+      //   {
+      //     name: 'Baseline fitting',
+      //     type: 'line',
+      //     data: props.baselineData,
+      //     colorIndex: 3,
+      //   }
+      // ]
+      options.series.push({
+        name: 'Baseline fitting',
+        type: 'line',
+        data: props.baselineData,
+        colorIndex: 3,
+      })
+    }
+    console.log("series", options.series);
   }
 
   console.log("options", options)

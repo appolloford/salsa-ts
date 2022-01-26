@@ -12,6 +12,9 @@ const Panels = (props: any) => {
   const baselinePoints = props.baselinePoints;
   const getBaselineFit = props.getBaselineFit;
 
+  const showSubtraction = props.showSubtraction;
+  const setShowSubtraction = props.setShowSubtraction;
+
   return (
     <div>
       <Tabs id="viewerpanels" vertical={true}>
@@ -28,6 +31,8 @@ const Panels = (props: any) => {
               setSelectMode={setSelectMode}
               baselinePoints={baselinePoints}
               getBaselineFit={getBaselineFit}
+              showSubtraction={showSubtraction}
+              setShowSubtraction={setShowSubtraction}
             />
           }
         />
@@ -65,9 +70,14 @@ const BaselinePanel = (props: any) => {
 
   const baselinePoints = props.baselinePoints;
   const getBaselineFit = props.getBaselineFit;
+
+  const showSubtraction = props.showSubtraction;
+  const setShowSubtraction = props.setShowSubtraction;
+
   return (
     <div>
       <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} />
+      <Switch checked={showSubtraction} label="Show only subtraction" onChange={() => { setShowSubtraction(!showSubtraction) }} />
       <HTMLTable striped={true} interactive={true} condensed={true}>
         {/* <caption>Selected Baseline Points</caption> */}
         <thead style={{ display: "table" }}>
