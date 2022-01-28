@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FileInput, HTMLSelect, Slider, Switch } from '@blueprintjs/core';
+import { Alignment, Button, Icon, Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import salsaSourceDef from './python/salsasource.py';
 import './App.css';
@@ -35,7 +35,6 @@ function App() {
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
-  const [xPrecision, setXPrecision] = useState(6);
   useEffect(() => {
     async function init() {
       if (!loadPyodideOK) {
@@ -81,21 +80,19 @@ function App() {
 
   return (
     <div className="App">
-      {/* <FileInput multiple onChange={(files: any) => { console.log(files) } }/> */}
-      {/* <FileInput 
-        fill
-        inputProps={{ multiple: true }}
-        onInputChange={(files:any) => { alert('Selected files: ' + files.map((f:any) => f.name).join(', ')) }}
-        // onInputChange={(files) => {console.log(files)}}
-      /> */}
-      {/* <FileInput inputProps={{ multiple: true, onChange: (e: any) => { console.log(e.target.files) } }} /> */}
-      <FileInput inputProps={{ multiple: true, onChange: (e: any) => { readFile(e.target.files[0]) } }} />
-      {/* <input type="file" id="actual-btn" hidden/> */}
-      {/* <form>
-        <input type="file" id="myFile" name="filename" />
-        <input type="submit" />
-      </form> */}
-      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} setUnit={setUnit} xPrecision={xPrecision} />
+      <Navbar>
+        <NavbarGroup align={Alignment.LEFT}>
+          <NavbarHeading>SalsaTS</NavbarHeading>
+          <NavbarDivider />
+          <Button>
+            <label htmlFor="input">
+              <input type="file" id="input" hidden onChange={(e: any) => { readFile(e.target.files[0]) }} />
+              <Icon icon="document" /> Upload
+            </label>
+          </Button>
+        </NavbarGroup>
+      </Navbar>
+      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} setUnit={setUnit} />
     </div>
   );
 }

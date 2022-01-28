@@ -43,7 +43,6 @@ const Viewer = (props: any) => {
   const dataSource = props.dataSource;
   const unit = props.unit;
   const setUnit = props.setUnit;
-  const xPrecision = props.xPrecision;
   let order, xdisplayUnit;
 
   if (unit === "freq-k") {
@@ -151,8 +150,6 @@ const Viewer = (props: any) => {
 
     options.xAxis = xAxis;
     options.yAxis = yAxis;
-
-    // plotLayout.xaxis.tickformat = `.${xPrecision}r`;
 
   }
 
