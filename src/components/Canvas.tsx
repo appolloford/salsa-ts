@@ -206,10 +206,10 @@ const Canvas = (props: any) => {
     // props.onMouseMove(xPos, yPos);
   };
 
-  const handleDoubleClick = (event: any) => {
-    const { xPos, yPos } = getCursorPos(event);
-    props?.onDoubleClick([xPos, yPos]);
-  };
+  // const handleDoubleClick = (event: any) => {
+  //   const { xPos, yPos } = getCursorPos(event);
+  //   props?.onDoubleClick([xPos, yPos]);
+  // };
 
   return (
     <>
@@ -219,7 +219,7 @@ const Canvas = (props: any) => {
         ref={chartComponentRef}
         containerProps={{
           onMouseMove: handleMouseMove,
-          onDoubleClick: handleDoubleClick,
+          // onDoubleClick: handleDoubleClick,
         }}
       // {...props}
       />

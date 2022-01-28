@@ -1,7 +1,7 @@
 import { Button, HTMLSelect, HTMLTable, Label, Switch, Tabs, Tab } from "@blueprintjs/core";
 import BaselineTable from './BaselineTable';
 
-const Panels = (props: any) => {
+const Controller = (props: any) => {
 
   const unit = props.unit;
   const setUnit = props.setUnit;
@@ -106,4 +106,4 @@ const BaselinePanel = (props: any) => {
   )
 }
 
-export default Panels;
+export default Controller;

@@ -1,26 +1,24 @@
 import { useRef, useState } from 'react';
-import { Button, HTMLTable } from "@blueprintjs/core";
 import Canvas from './Canvas';
-import Panels from './Panels';
 
 
 const Viewer = (props: any) => {
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
-  const [selectMode, setSelectMode] = useState(false);
 
-  const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
-  const [baselineData, setBaselineData] = useState<number[][]>([])
-  const [showSubtraction, setShowSubtraction] = useState(false);
+  const baselineData = props.baselineData;
+  const selectMode = props.selectMode;
+  const setBaselinePoints = props.setBaselinePoints;
+  const showSubtraction = props.showSubtraction;
 
   const displayCursorPos = (x: number, y: number) => {
     setCursorX(x);
     setCursorY(y);
   };
 
-  const addBaselinePoints = (point: Array<number>) => {
-    setBaselinePoints([...baselinePoints, point]);
-  };
+  // const addBaselinePoints = (point: Array<number>) => {
+  //   setBaselinePoints([...baselinePoints, point]);
+  // };
 
   // TODO: update table when drag and drop
   // const updateBaselinePoints = (oldPoint: Array<number>, newPoint: Array<number>) => {
@@ -42,7 +40,6 @@ const Viewer = (props: any) => {
   const fileName = props.fileName;
   const dataSource = props.dataSource;
   const unit = props.unit;
-  const setUnit = props.setUnit;
   let order, xdisplayUnit;
 
   if (unit === "freq-k") {
@@ -81,27 +78,6 @@ const Viewer = (props: any) => {
       },
     },
   };
-
-  const clearBaselineData = () => { setBaselineData([]) };
-
-  const getBaselineFit = (points: number[][]) => {
-
-    console.log("get fits point", points);
-    if (points.length === 0) {
-      clearBaselineData();
-      return;
-    }
-
-    const xdata = points.map((item: number[]) => { return item[0] });
-    const ydata = points.map((item: number[]) => { return item[1] });
-    const result = dataSource?.fit_baseline_point(xdata, ydata, unit).toJs() || baselinePoints;
-    // make Float64Array to Array
-    const data = result.map((item: number[]) => {
-      return [item[0], item[1]]
-    })
-    console.log(data)
-    setBaselineData(data);
-  }
 
   let sourceData: number[][] = [];
 
@@ -157,27 +133,15 @@ const Viewer = (props: any) => {
     <>
       <Canvas
         source={sourceData}
-        // baselinePoints={baselinePoints}
         baselineData={baselineData}
         options={options}
         onMouseMove={displayCursorPos}
-        onDoubleClick={addBaselinePoints}
         selectMode={selectMode}
         onSelect={setBaselinePoints}
         showSubtraction={showSubtraction}
       // onDrop={updateBaselinePoints}
       />
       <h4>X: {cursorX} Y: {cursorY}</h4>
-      <Panels
-        unit={unit}
-        setUnit={setUnit}
-        selectMode={selectMode}
-        setSelectMode={setSelectMode}
-        baselinePoints={baselinePoints}
-        getBaselineFit={getBaselineFit}
-        showSubtraction={showSubtraction}
-        setShowSubtraction={setShowSubtraction}
-      />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Alignment, Button, Icon, Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
+import Controller from './components/Controller';
 import salsaSourceDef from './python/salsasource.py';
 import './App.css';
 
@@ -35,6 +36,13 @@ function App() {
   const [loadPyodideOK, setLoadPyodideOK] = useState(false);
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
+
+  const [selectMode, setSelectMode] = useState(false);
+
+  const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
+  const [baselineData, setBaselineData] = useState<number[][]>([])
+  const [showSubtraction, setShowSubtraction] = useState(false);
+
   useEffect(() => {
     async function init() {
       if (!loadPyodideOK) {
@@ -47,7 +55,7 @@ function App() {
     init()
   });
 
-  const [dataSource, setDataSource] = useState();
+  const [dataSource, setDataSource] = useState<any>();
 
   const getData = async (file: File) => {
     const script = await (await fetch(salsaSourceDef)).text();
@@ -78,6 +86,27 @@ function App() {
     }
   }
 
+  const clearBaselineData = () => { setBaselineData([]) };
+
+  const getBaselineFit = (points: number[][]) => {
+
+    console.log("get fits point", points);
+    if (points.length === 0) {
+      clearBaselineData();
+      return;
+    }
+
+    const xdata = points.map((item: number[]) => { return item[0] });
+    const ydata = points.map((item: number[]) => { return item[1] });
+    const result = dataSource?.fit_baseline_point(xdata, ydata, unit).toJs() || baselinePoints;
+    // make Float64Array to Array
+    const data = result.map((item: number[]) => {
+      return [item[0], item[1]]
+    })
+    console.log(data)
+    setBaselineData(data);
+  }
+
   return (
     <div className="App">
       <Navbar>
@@ -92,7 +121,26 @@ function App() {
           </Button>
         </NavbarGroup>
       </Navbar>
-      <Viewer fileName={newFileName} dataSource={dataSource} unit={unit} setUnit={setUnit} />
+      <Viewer
+        fileName={newFileName}
+        dataSource={dataSource}
+        unit={unit}
+        selectMode={selectMode}
+        baselineData={baselineData}
+        baselinePoints={baselinePoints}
+        setBaselinePoints={setBaselinePoints}
+        showSubtraction={showSubtraction}
+      />
+      <Controller
+        unit={unit}
+        setUnit={setUnit}
+        selectMode={selectMode}
+        setSelectMode={setSelectMode}
+        baselinePoints={baselinePoints}
+        getBaselineFit={getBaselineFit}
+        showSubtraction={showSubtraction}
+        setShowSubtraction={setShowSubtraction}
+      />
     </div>
   );
 }
