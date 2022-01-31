@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, memo } from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
@@ -6,7 +6,7 @@ import HC_exporting from 'highcharts/modules/exporting';
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
 
-const Canvas = (props: any) => {
+const Canvas = memo((props: any) => {
 
   // const chartComponentRef = props.chartComponentRef;
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
@@ -200,10 +200,8 @@ const Canvas = (props: any) => {
   };
 
   const handleMouseMove = (event: any) => {
-    // const { xPos, yPos } = getCursorPos(event);
-    //? Should the function be on
-    // Highchart re-render when mouse moves. It consumes a lot resources
-    // props.onMouseMove(xPos, yPos);
+    const { xPos, yPos } = getCursorPos(event);
+    props.onMouseMove(xPos, yPos);
   };
 
   // const handleDoubleClick = (event: any) => {
@@ -225,7 +223,7 @@ const Canvas = (props: any) => {
       />
     </>
   );
-}
+});
 
 // Canvas.defaultProps = {
 //   options: {
