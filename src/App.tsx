@@ -43,6 +43,9 @@ function App() {
   const [baselineData, setBaselineData] = useState<number[][]>([])
   const [showSubtraction, setShowSubtraction] = useState(false);
 
+  const [cursorX, setCursorX] = useState(0);
+  const [cursorY, setCursorY] = useState(0);
+
   useEffect(() => {
     async function init() {
       if (!loadPyodideOK) {
@@ -130,7 +133,10 @@ function App() {
         baselinePoints={baselinePoints}
         setBaselinePoints={setBaselinePoints}
         showSubtraction={showSubtraction}
+        setCursorX={setCursorX}
+        setCursorY={setCursorY}
       />
+      <h4>X: {cursorX} Y: {cursorY}</h4>
       <Controller
         unit={unit}
         setUnit={setUnit}
