@@ -1,5 +1,4 @@
 import { useRef, useState, memo } from 'react';
-// import Canvas from './Canvas';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
@@ -13,10 +12,10 @@ const Viewer = memo((props: any) => {
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
 
-  const baselineData = props.baselineData;
   const selectMode = props.selectMode;
   const setBaselinePoints = props.setBaselinePoints;
   const showSubtraction = props.showSubtraction;
+  const isBaselineFitted = props.isBaselineFitted;
 
   const selectPointsByDrag = (e: any) => {
 
@@ -29,14 +28,17 @@ const Viewer = memo((props: any) => {
     if (chart?.series) {
       chart.series.forEach(
         (series: any) => {
-          series?.points.forEach(
-            (point: any) => {
-              if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
-                point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
-                point.select(true, true);
+          // check the series is selectable, don't select the points on fitting line
+          if (series.options.allowPointSelect === true) {
+            series?.points.forEach(
+              (point: any) => {
+                if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
+                  point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
+                  point.select(true, true);
+                }
               }
-            }
-          )
+            )
+          }
         }
       )
     }
@@ -143,6 +145,68 @@ const Viewer = memo((props: any) => {
       return [xi, ydata[i]];
     });
 
+    // create dummy baseline array and updated the value if fitting has done
+    const baselineData = xdataArray.map((xi: number, i: number) => {
+      return [xi, 0.0];
+    });
+
+    if (isBaselineFitted === true) {
+      const ydata = dataSource.baseline.toJs();
+      baselineData.forEach((item: number[], i: number) => {
+        item[1] = ydata[i];
+      });
+    }
+
+    // create subtracted data if the option is selected
+    if (showSubtraction === true) {
+      const subtractedData = sourceData.map(
+        (item: number[], idx: number) => {
+          return [item[0], item[1] - baselineData[idx][1]]
+        }
+      )
+      options.series = [
+        {
+          name: 'Observation - Baseline',
+          type: 'scatter',
+          data: subtractedData,
+          findNearestPointBy: 'xy',
+        },
+      ];
+    }
+    else {
+      options.series = [
+        {
+          name: 'Observation',
+          type: 'scatter',
+          lineWidth: 2,
+          data: sourceData,
+          allowPointSelect: selectMode,
+          findNearestPointBy: 'xy',
+        },
+        // {
+        //   name: "Baseline",
+        //   type: "scatter",
+        //   data: props.baselinePoints,
+        //   dragDrop: {
+        //     draggableX: true,
+        //     draggableY: true
+        //   },
+        // },
+      ];
+
+      // add another label if we plot both original data and baseline
+      if (isBaselineFitted === true) {
+        options.series.push({
+          name: 'Baseline fitting',
+          type: 'line',
+          data: baselineData,
+          allowPointSelect: false,
+          colorIndex: 3,
+        })
+      }
+      console.log("series", options.series);
+    }
+
     // options.series = [
     //   {
     //     name: "Observation",
@@ -196,64 +260,6 @@ const Viewer = memo((props: any) => {
     }
   }
 
-  if (showSubtraction === true) {
-    const subtractedData = sourceData.map(
-      (pos: Array<number>, idx: number) => {
-        const baselinePoint = props.baselineData[idx] || [0.0, 0.0];
-        return [pos[0], pos[1] - baselinePoint[1]]
-      }
-    )
-    options.series = [
-      {
-        name: 'Observation - Baseline',
-        type: 'scatter',
-        data: subtractedData,
-        allowPointSelect: selectMode,
-        findNearestPointBy: 'xy',
-      },
-    ];
-  }
-  else {
-    options.series = [
-      {
-        name: 'Observation',
-        type: 'scatter',
-        lineWidth: 2,
-        data: sourceData,
-        allowPointSelect: selectMode,
-        findNearestPointBy: 'xy',
-      },
-      // {
-      //   name: "Baseline",
-      //   type: "scatter",
-      //   data: props.baselinePoints,
-      //   dragDrop: {
-      //     draggableX: true,
-      //     draggableY: true
-      //   },
-      // },
-    ];
-
-    if (baselineData) {
-      // options.series = [
-      //   ...options.series,
-      //   {
-      //     name: 'Baseline fitting',
-      //     type: 'line',
-      //     data: baselineData,
-      //     colorIndex: 3,
-      //   }
-      // ]
-      options.series.push({
-        name: 'Baseline fitting',
-        type: 'line',
-        data: baselineData,
-        colorIndex: 3,
-      })
-    }
-    console.log("series", options.series);
-  }
-
   console.log("options", options)
 
   const getCursorPos = (event: any) => {
@@ -297,18 +303,7 @@ const Viewer = memo((props: any) => {
           onMouseMove: handleMouseMove,
           // onDoubleClick: handleDoubleClick,
         }}
-      // {...props}
       />
-      {/* <Canvas
-        source={sourceData}
-        baselineData={baselineData}
-        options={options}
-        onMouseMove={displayCursorPos}
-        selectMode={selectMode}
-        onSelect={setBaselinePoints}
-        showSubtraction={showSubtraction}
-      // onDrop={updateBaselinePoints}
-      /> */}
     </>
   );
 });

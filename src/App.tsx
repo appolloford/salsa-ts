@@ -40,7 +40,7 @@ function App() {
   const [selectMode, setSelectMode] = useState(false);
 
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
-  const [baselineData, setBaselineData] = useState<number[][]>([])
+  const [isBaselineFitted, setIsBaselineFitted] = useState(false);
   const [showSubtraction, setShowSubtraction] = useState(false);
 
   const [cursorX, setCursorX] = useState(0);
@@ -89,25 +89,12 @@ function App() {
     }
   }
 
-  const clearBaselineData = () => { setBaselineData([]) };
-
   const getBaselineFit = (points: number[][]) => {
-
-    console.log("get fits point", points);
-    if (points.length === 0) {
-      clearBaselineData();
-      return;
-    }
 
     const xdata = points.map((item: number[]) => { return item[0] });
     const ydata = points.map((item: number[]) => { return item[1] });
-    const result = dataSource?.fit_baseline_point(xdata, ydata, unit).toJs() || baselinePoints;
-    // make Float64Array to Array
-    const data = result.map((item: number[]) => {
-      return [item[0], item[1]]
-    })
-    console.log(data)
-    setBaselineData(data);
+    const result = dataSource?.fit_baseline(xdata, ydata, unit).toJs();
+    setIsBaselineFitted(true);
   }
 
   return (
@@ -129,8 +116,8 @@ function App() {
         dataSource={dataSource}
         unit={unit}
         selectMode={selectMode}
-        baselineData={baselineData}
         baselinePoints={baselinePoints}
+        isBaselineFitted={isBaselineFitted}
         setBaselinePoints={setBaselinePoints}
         showSubtraction={showSubtraction}
         setCursorX={setCursorX}
