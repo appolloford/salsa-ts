@@ -1,4 +1,5 @@
-import { Button, HTMLSelect, HTMLTable, Label, Switch, Tabs, Tab } from "@blueprintjs/core";
+import { Button, HTMLSelect, HTMLTable, Label, NumericInput, Switch, Tabs, Tab } from "@blueprintjs/core";
+import { useState } from "react";
 import BaselineTable from './BaselineTable';
 
 const Controller = (props: any) => {
@@ -14,6 +15,9 @@ const Controller = (props: any) => {
 
   const showSubtraction = props.showSubtraction;
   const setShowSubtraction = props.setShowSubtraction;
+
+  const [nGaussian, setNGaussian] = useState(1);
+  const getGaussianFit = props.getGaussianFit;
 
   return (
     <div>
@@ -35,6 +39,11 @@ const Controller = (props: any) => {
               setShowSubtraction={setShowSubtraction}
             />
           }
+        />
+        <Tab
+          id="gaussianpanel"
+          title="Gaussian"
+          panel={<GaussianPanel nGaussian={nGaussian} setNGaussian={setNGaussian} getGaussianFit={getGaussianFit} />}
         />
       </Tabs>
     </div>
@@ -102,6 +111,33 @@ const BaselinePanel = (props: any) => {
         </tbody>
       </HTMLTable>
       <Button text="Fit Baseline" onClick={() => { getBaselineFit(baselinePoints) }} />
+    </div>
+  )
+}
+
+const GaussianPanel = (props: any) => {
+  const nGaussian = props.nGaussian;
+  const setNGaussian = props.setNGaussian;
+  const getGaussianFit = props.getGaussianFit;
+  const [fitGaussian, setFitGaussian] = useState(false);
+  return (
+    <div>
+      <Switch
+        checked={fitGaussian}
+        label="Fit Gaussian"
+        onChange={() => {
+          setFitGaussian(!fitGaussian);
+          getGaussianFit(nGaussian);
+        }}
+      />
+      <NumericInput
+        value={nGaussian}
+        min={1}
+        onValueChange={(value) => {
+          setNGaussian(value);
+          if (fitGaussian) getGaussianFit(value);
+        }}
+      />
     </div>
   )
 }

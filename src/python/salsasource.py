@@ -4,12 +4,22 @@ from io import BytesIO
 from js import jsarray
 
 from astropy.io import fits
+from scipy.optimize import curve_fit
 
 # from scipy.optimize import curve_fit
 # #? fit gaussian: https://stackoverflow.com/questions/11507028/fit-a-gaussian-function
 
 clight = 299792458
 
+def _gaussian(x: np.ndarray, mean: float, sigma: float, amp: float) -> float:
+    return amp * np.exp( -(x-mean)**2 / (2*sigma**2) )
+
+def _gaussian_fitting_func(x, *params) -> float:
+    y = np.zeros_like(x)
+    for i in range(0, len(params), 3):
+        mean, sigma, amp = params[i], params[i+1], params[i+2]
+        y = y + _gaussian(x, mean, sigma, amp)
+    return y
 
 class SALSASource:
     def __init__(self, bytesfile) -> None:
@@ -78,6 +88,31 @@ class SALSASource:
         # ? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
 
         return self._baseline
+
+    def fit_gaussian(self, unit: str=None, ngaussian: int=1) -> np.ndarray:
+
+        xdata = self.axisdata(1, unit=unit)
+
+        if self.baseline is None:
+            return np.zeros(xdata.shape) 
+
+        ydata = self.content[0].data.flatten() - self.baseline
+
+        xdatarange = xdata.max() - xdata.min()
+
+        p0 = [xdata.mean(), xdatarange / 2.0, ydata.max()] * ngaussian
+        lbound = [xdata.min(), 0.0, ydata.min()] * ngaussian
+        ubound = [xdata.max(), xdatarange, ydata.max()] * ngaussian
+
+        popt, pcov = curve_fit(_gaussian_fitting_func, xdata, ydata, p0=p0, bounds=(lbound, ubound))
+        self._gaussian = _gaussian_fitting_func(xdata, *popt)
+
+        return self._gaussian
+
+
+    @property
+    def gaussian(self):
+        return self._gaussian
 
 
 # if __name__ == "__main__":

@@ -18,7 +18,7 @@ const pyodideInstance = async () => {
   const pyodide = await window.loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
   });
-  await pyodide.loadPackage("astropy")
+  await pyodide.loadPackage(["astropy", "scipy"])
   // await pyodide.loadPackage("astropy")
   return pyodide
 }
@@ -42,6 +42,8 @@ function App() {
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
   const [isBaselineFitted, setIsBaselineFitted] = useState(false);
   const [showSubtraction, setShowSubtraction] = useState(false);
+
+  const [gaussianData, setGaussianData] = useState<number[]>([]);
 
   const [cursorX, setCursorX] = useState(0);
   const [cursorY, setCursorY] = useState(0);
@@ -97,6 +99,11 @@ function App() {
     setIsBaselineFitted(true);
   }
 
+  const getGaussianFit = (nGaussian: number) => {
+    const result = dataSource?.fit_gaussian(unit, nGaussian).toJs();
+    setGaussianData(result);
+  }
+
   return (
     <div className="App">
       <Navbar>
@@ -120,6 +127,7 @@ function App() {
         isBaselineFitted={isBaselineFitted}
         setBaselinePoints={setBaselinePoints}
         showSubtraction={showSubtraction}
+        gaussianData={gaussianData}
         setCursorX={setCursorX}
         setCursorY={setCursorY}
       />
@@ -133,6 +141,7 @@ function App() {
         getBaselineFit={getBaselineFit}
         showSubtraction={showSubtraction}
         setShowSubtraction={setShowSubtraction}
+        getGaussianFit={getGaussianFit}
       />
     </div>
   );

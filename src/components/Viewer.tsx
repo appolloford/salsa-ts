@@ -17,6 +17,8 @@ const Viewer = memo((props: any) => {
   const showSubtraction = props.showSubtraction;
   const isBaselineFitted = props.isBaselineFitted;
 
+  const gaussianData = props.gaussianData;
+
   const selectPointsByDrag = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -205,6 +207,23 @@ const Viewer = memo((props: any) => {
         })
       }
       console.log("series", options.series);
+    }
+
+    if (gaussianData) {
+      const gaussian = xdataArray.map((xi: number, i: number) => {
+        return [xi, 0.0];
+      });
+      gaussian.forEach((item: number[], i: number) => {
+        item[1] = gaussianData[i];
+      });
+      options.series.push(
+        {
+          name: 'Gaussian',
+          type: 'line',
+          data: gaussian,
+          findNearestPointBy: 'xy',
+        },
+      );
     }
 
     // options.series = [
