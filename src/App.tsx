@@ -33,7 +33,7 @@ const runScript = async (pyodide: any, code: string) => {
 
 function App() {
   const pyodideObj = useRef<any>(null);
-  const [loadPyodideOK, setLoadPyodideOK] = useState(false);
+  const [pyodideLoaded, setPyodideLoaded] = useState(false);
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
 
@@ -50,9 +50,9 @@ function App() {
 
   useEffect(() => {
     async function init() {
-      if (!loadPyodideOK) {
+      if (!pyodideLoaded) {
         pyodideObj.current = await pyodideInstance();
-        setLoadPyodideOK(true)
+        setPyodideLoaded(true)
       } else {
         console.log("no duplicate reload to avoid pyodide error")
       }
@@ -95,8 +95,20 @@ function App() {
 
     const xdata = points.map((item: number[]) => { return item[0] });
     const ydata = points.map((item: number[]) => { return item[1] });
-    const result = dataSource?.fit_baseline(xdata, ydata, unit).toJs();
-    setIsBaselineFitted(true);
+    if (!xdata.length || !ydata.length) {
+      dataSource.baseline = [];
+      setIsBaselineFitted(false);
+    }
+    else {
+      dataSource?.fit_baseline(xdata, ydata, unit);
+      setIsBaselineFitted(true);
+    }
+  }
+
+  const clearBaseline = () => {
+    setBaselinePoints([])
+    dataSource?.fit_baseline([], [], unit);
+    setIsBaselineFitted(false);
   }
 
   const getGaussianFit = (nGaussian: number) => {
@@ -110,7 +122,7 @@ function App() {
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>SalsaTS</NavbarHeading>
           <NavbarDivider />
-          <Button>
+          <Button disabled={!pyodideLoaded}>
             <label htmlFor="input">
               <input type="file" id="input" hidden onChange={(e: any) => { readFile(e.target.files[0]) }} />
               <Icon icon="document" /> Upload
@@ -138,6 +150,7 @@ function App() {
         selectMode={selectMode}
         setSelectMode={setSelectMode}
         baselinePoints={baselinePoints}
+        clearBaseline={clearBaseline}
         getBaselineFit={getBaselineFit}
         showSubtraction={showSubtraction}
         setShowSubtraction={setShowSubtraction}

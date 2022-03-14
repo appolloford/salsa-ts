@@ -35,7 +35,7 @@ class SALSASource:
     def rawdata(self) -> list:
         return self.content[0].data.tolist()
 
-    def axisdata(self, idx: int, unit: str = None, order: int = 0) -> np.ndarray:
+    def axisdata(self, idx: int, unit: str = None) -> np.ndarray:
         if idx > self.header.get("NAXIS"):
             raise RuntimeError(f"Input index {idx} is higher than the dimension")
 
@@ -51,22 +51,32 @@ class SALSASource:
             ret = [reval + (i - repix) * delta for i in range(naxis)]
 
         else:
+
+            lowerunit = unit.lower()
+
             if idx == 1:
                 # Channels
-                if unit.lower().startswith("chan"):
-                    ret = list(range(naxis))
+                if lowerunit.startswith("chan"):
+                    ret = np.array(list(range(naxis)))
 
-                elif unit.lower().startswith("freq"):
-                    ret = [reval + (i - repix) * delta for i in range(naxis)]
+                elif lowerunit.startswith("freq"):
+                    ret = np.array([reval + (i - repix) * delta for i in range(naxis)])
 
-                elif unit.lower().startswith("vel"):
+                    if lowerunit.endswith("-k"):
+                        ret /= 10**3
+                    elif lowerunit.endswith("-m"):
+                        ret /= 10**6
+                    elif lowerunit.endswith("-g"):
+                        ret /= 10**9
+
+                elif lowerunit.startswith("vel"):
                     freq = np.array([reval + (i - repix) * delta for i in range(naxis)])
                     ret = (-clight * (freq - reval) / reval - vlsr) / 1000
 
                 else:
                     raise RuntimeError(f"{cunit} cannot be converted to {unit}")
 
-        return np.array(ret) / 10 ** order
+        return ret
 
     @property
     def baseline(self) -> np.ndarray:
@@ -80,12 +90,18 @@ class SALSASource:
         deg: float = 2,
     ) -> np.ndarray:
 
-        poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
-        x = self.axisdata(1, unit=unit)
-        self._baseline = np.polyval(poly, x)
-        # self._baseline = {xi: yi for xi, yi in zip(x, y)}
-        # self._baseline = np.array([[xi, yi] for xi, yi in zip(x, y)])
-        # ? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
+        if not xdata or not ydata:
+            self._baseline = []
+
+        else:
+            poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
+            print("xdata inp python", xdata)
+            x = self.axisdata(1, unit=unit)
+            print("x inp python", x)
+            self._baseline = np.polyval(poly, x)
+            # self._baseline = {xi: yi for xi, yi in zip(x, y)}
+            # self._baseline = np.array([[xi, yi] for xi, yi in zip(x, y)])
+            # ? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
 
         return self._baseline
 

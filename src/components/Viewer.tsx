@@ -95,25 +95,19 @@ const Viewer = memo((props: any) => {
   const fileName = props.fileName;
   const dataSource = props.dataSource;
   const unit = props.unit;
-  let order, xdisplayUnit;
+  let xdisplayUnit;
 
   if (unit === "freq-k") {
-    order = 3;
     xdisplayUnit = "kHz";
   } else if (unit === "freq-m") {
-    order = 6;
     xdisplayUnit = "MHz";
   } else if (unit === "freq-g") {
-    order = 9;
     xdisplayUnit = "GHz";
   } else if (unit === "chan") {
-    order = 0;
     xdisplayUnit = "Channel";
   } else if (unit === "vel") {
-    order = 0;
     xdisplayUnit = "Velocity (km/s)";
   } else {
-    order = 0;
     xdisplayUnit = "Hz";
   }
 
@@ -138,7 +132,7 @@ const Viewer = memo((props: any) => {
 
   if (dataSource) {
 
-    const xdata = dataSource.axisdata(1, unit, order).toJs();
+    const xdata = dataSource.axisdata(1, unit).toJs();
     const ydata = dataSource.rawdata.toJs()[0][0];
     const header = dataSource.header.toJs();
 
@@ -243,6 +237,16 @@ const Viewer = memo((props: any) => {
     //     },
     //   }
     // ];
+
+    const subtitle = `${header.get("CTYPE2")}: ${header.get("CRVAL2")}, ${header.get("CTYPE3")}: ${header.get("CRVAL3")}`;
+
+    options.title = {
+      text: fileName
+    };
+
+    options.subtitle = {
+      text: subtitle
+    };
 
     const xAxis = {
       title: {

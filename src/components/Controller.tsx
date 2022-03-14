@@ -18,6 +18,7 @@ const Controller = (props: any) => {
 
   const [nGaussian, setNGaussian] = useState(1);
   const getGaussianFit = props.getGaussianFit;
+  const clearBaseline = props.clearBaseline;
 
   return (
     <div>
@@ -34,6 +35,7 @@ const Controller = (props: any) => {
               selectMode={selectMode}
               setSelectMode={setSelectMode}
               baselinePoints={baselinePoints}
+              clearBaseline={clearBaseline}
               getBaselineFit={getBaselineFit}
               showSubtraction={showSubtraction}
               setShowSubtraction={setShowSubtraction}
@@ -78,6 +80,7 @@ const BaselinePanel = (props: any) => {
   const setSelectMode = props.setSelectMode;
 
   const baselinePoints = props.baselinePoints;
+  const clearBaseline = props.clearBaseline;
   const getBaselineFit = props.getBaselineFit;
 
   const showSubtraction = props.showSubtraction;
@@ -87,6 +90,7 @@ const BaselinePanel = (props: any) => {
     <div>
       <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} />
       <Switch checked={showSubtraction} label="Show only subtraction" onChange={() => { setShowSubtraction(!showSubtraction) }} />
+      <Button text="Clear" onClick={() => { clearBaseline() }} />
       <HTMLTable striped={true} interactive={true} condensed={true}>
         {/* <caption>Selected Baseline Points</caption> */}
         <thead style={{ display: "table" }}>
