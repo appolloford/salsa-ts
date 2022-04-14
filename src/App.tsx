@@ -168,7 +168,16 @@ function App() {
         <div style={{ flex: 1 }}>
           <Tabs >
             <Tab id="cursorpanel" title="Cursor Information" panel={
-              <CursorInforPanel xpos={cursorX} ypos={cursorY} cursorDragMode={cursorDragMode} onChange={setCursorDragMode} baselinePoints={baselinePoints} />
+              <CursorInforPanel
+                xpos={cursorX}
+                ypos={cursorY}
+                cursorDragMode={cursorDragMode}
+                isBaselineFitted={isBaselineFitted}
+                baselinePoints={baselinePoints}
+                showSubtraction={showSubtraction}
+                gaussianGuess={gaussianGuess}
+                onChange={setCursorDragMode}
+              />
             }></Tab>
           </Tabs>
         </div>
@@ -178,8 +187,12 @@ function App() {
 }
 
 const CursorInforPanel = (props: any) => {
+  const isBaselineFitted = props.isBaselineFitted;
   const baselinePoints = props.baselinePoints;
+  const showSubtraction = props.showSubtraction;
+  const gaussianGuess = props.gaussianGuess;
   const [showBaselinePoints, setShowBaselinePoints] = useState(false);
+  const [showGaussianGuess, setShowGaussianGuess] = useState(false);
 
   return (
     <div style={{ textAlign: 'left' }}>
@@ -192,12 +205,16 @@ const CursorInforPanel = (props: any) => {
         >
           <Radio label="Zoom" value="zoom" />
           <Radio label="Baseline" value="baseline" />
-          <Radio label="Gaussian" value="gaussian" />
+          <Radio label="Gaussian" value="gaussian" disabled={!isBaselineFitted || !showSubtraction} />
         </RadioGroup>
       </FormGroup>
-      <Button onClick={() => { setShowBaselinePoints(!showBaselinePoints) }}>Show Baseline Points</Button>
+      <Button small onClick={() => { setShowBaselinePoints(!showBaselinePoints) }}>Show Baseline Points</Button>
       <Collapse isOpen={showBaselinePoints}>
         <BaselinePointTable baselinePoints={baselinePoints} />
+      </Collapse>
+      <Button small onClick={() => { setShowGaussianGuess(!showGaussianGuess) }}>Show Gaussian Ranges</Button>
+      <Collapse isOpen={showGaussianGuess}>
+        <GaussianGuessTable gaussianGuess={gaussianGuess} />
       </Collapse>
     </div>
   )
@@ -233,6 +250,41 @@ const BaselinePointTable = (props: any) => {
         </tbody>
       </HTMLTable>
     </Card>
+  )
+}
+
+const GaussianGuessTable = (props: any) => {
+  const gaussianGuess = props.gaussianGuess;
+
+  return (
+    <>
+      <Card>
+        <HTMLTable striped={true} condensed={true} interactive={true}>
+          {/* <caption>Selected Baseline Points</caption> */}
+          <thead style={{ display: "table" }}>
+            <tr>
+              <th style={{ width: 140 }}>Selected Range</th>
+              <th style={{ width: 140 }}>X range</th>
+              <th style={{ width: 140 }}>Y range</th>
+              {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
+            </tr>
+          </thead>
+          <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
+            {
+              gaussianGuess.map((item: any, index: number) => {
+                return (
+                  <tr style={{ display: "table" }} key={item[0]} onClick={() => { console.log("click table") }}>
+                    <td style={{ width: 140, textAlign: 'left' }}>{index}</td>
+                    <td style={{ width: 140, textAlign: 'left' }}>({item[0].toFixed(6)}, {item[1].toFixed(6)})</td>
+                    <td style={{ width: 140, textAlign: 'left' }}>({item[2].toFixed(6)}, {item[3].toFixed(6)})</td>
+                    {/* <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td> */}
+                  </tr>);
+              })
+            }
+          </tbody>
+        </HTMLTable>
+      </Card>
+    </>
   )
 }
 

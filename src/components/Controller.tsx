@@ -107,7 +107,7 @@ const GaussianPanel = (props: any) => {
         label="Fit Gaussian"
         onChange={() => {
           setFitGaussian(!fitGaussian);
-          getGaussianFit(nGaussian);
+          getGaussianFit(fitGaussian ? 0 : nGaussian);
         }}
       />
       <NumericInput

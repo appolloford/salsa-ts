@@ -76,7 +76,7 @@ const Viewer = memo((props: any) => {
     const ymax = e.yAxis[0].max;
 
     if (props.cursorDragMode === "gaussian") {
-      setGaussianGuess([...gaussianGuess, [(xmin + xmax) / 2, (xmax - xmin), ymax]]);
+      setGaussianGuess([...gaussianGuess, [xmin, xmax, ymin, ymax]]);
     }
 
     console.log(gaussianGuess);
@@ -254,6 +254,7 @@ const Viewer = memo((props: any) => {
           type: 'line',
           data: gaussian,
           findNearestPointBy: 'xy',
+          colorIndex: 5,
         },
       );
     }

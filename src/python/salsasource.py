@@ -91,7 +91,7 @@ class SALSASource:
     ) -> np.ndarray:
 
         if not xdata or not ydata:
-            self._baseline = []
+            self._baseline = None
 
         else:
             poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
@@ -105,9 +105,13 @@ class SALSASource:
 
         return self._baseline
 
-    def fit_gaussian(self, unit: str=None, ngaussian: int=1) -> np.ndarray:
+    def fit_gaussian(self, unit: str=None, ngaussian: int=0) -> np.ndarray:
 
         xdata = self.axisdata(1, unit=unit)
+
+        if not ngaussian:
+            self._gaussian = np.zeros(xdata.shape)
+            return self._gaussian
 
         if self.baseline is None:
             return np.zeros(xdata.shape) 
