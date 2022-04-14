@@ -1,4 +1,4 @@
-import { Button, HTMLSelect, HTMLTable, Label, NumericInput, Switch, Tabs, Tab } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, HTMLTable, NumericInput, Switch, Tabs, Tab, Divider } from "@blueprintjs/core";
 import { useState } from "react";
 import BaselineTable from './BaselineTable';
 
@@ -7,10 +7,10 @@ const Controller = (props: any) => {
   const unit = props.unit;
   const setUnit = props.setUnit;
 
-  const selectMode = props.selectMode;
-  const setSelectMode = props.setSelectMode;
+  // const selectMode = props.selectMode;
+  // const setSelectMode = props.setSelectMode;
 
-  const baselinePoints = props.baselinePoints;
+  // const baselinePoints = props.baselinePoints;
   const getBaselineFit = props.getBaselineFit;
 
   const showSubtraction = props.showSubtraction;
@@ -21,7 +21,7 @@ const Controller = (props: any) => {
   const clearBaseline = props.clearBaseline;
 
   return (
-    <div>
+    <div style={props.style}>
       <Tabs id="viewerpanels" vertical={true}>
         <Tab
           id="generalpanel"
@@ -32,9 +32,9 @@ const Controller = (props: any) => {
           title="Baseline"
           panel={
             <BaselinePanel
-              selectMode={selectMode}
-              setSelectMode={setSelectMode}
-              baselinePoints={baselinePoints}
+              // selectMode={selectMode}
+              // setSelectMode={setSelectMode}
+              // baselinePoints={baselinePoints}
               clearBaseline={clearBaseline}
               getBaselineFit={getBaselineFit}
               showSubtraction={showSubtraction}
@@ -59,8 +59,7 @@ const GeneralPanel = (props: any) => {
 
   return (
     <>
-      <Label>
-        x-axis unit:
+      <FormGroup label="x-axis unit:" inline={true}>
         <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
           <option value="freq">Frequency (Hz)</option>
           <option value="freq-k">Frequency (kHz)</option>
@@ -69,17 +68,17 @@ const GeneralPanel = (props: any) => {
           <option value="chan">Channel</option>
           <option value="vel">Velocity (km/s)</option>
         </HTMLSelect>
-      </Label>
+      </FormGroup>
     </>
   )
 }
 
 const BaselinePanel = (props: any) => {
 
-  const selectMode = props.selectMode;
-  const setSelectMode = props.setSelectMode;
+  // const selectMode = props.selectMode;
+  // const setSelectMode = props.setSelectMode;
 
-  const baselinePoints = props.baselinePoints;
+  // const baselinePoints = props.baselinePoints;
   const clearBaseline = props.clearBaseline;
   const getBaselineFit = props.getBaselineFit;
 
@@ -88,33 +87,10 @@ const BaselinePanel = (props: any) => {
 
   return (
     <div>
-      <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} />
+      {/* <Switch checked={selectMode} label="select baseline" onChange={() => { setSelectMode(!selectMode) }} /> */}
       <Switch checked={showSubtraction} label="Show only subtraction" onChange={() => { setShowSubtraction(!showSubtraction) }} />
       <Button text="Clear" onClick={() => { clearBaseline() }} />
-      <HTMLTable striped={true} interactive={true} condensed={true}>
-        {/* <caption>Selected Baseline Points</caption> */}
-        <thead style={{ display: "table" }}>
-          <tr>
-            <th style={{ width: 140 }}>Selected Points</th>
-            <th style={{ width: 140 }}>X coordinate</th>
-            <th style={{ width: 140 }}>Y coordinate</th>
-            {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
-          </tr>
-        </thead>
-        <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
-          <BaselineTable baseline={baselinePoints} />
-          {/* {baselinePoints.map(item => {
-              return (
-                <tr key={item[0]} onClick={() => { console.log("click table") }}>
-                  <td>{item[0]}</td>
-                  <td>{item[1]}</td>
-                  <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td>
-                </tr>
-              );
-            })} */}
-        </tbody>
-      </HTMLTable>
-      <Button text="Fit Baseline" onClick={() => { getBaselineFit(baselinePoints) }} />
+      <Button text="Fit Baseline" onClick={() => { getBaselineFit() }} />
     </div>
   )
 }

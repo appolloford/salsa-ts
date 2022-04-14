@@ -12,8 +12,11 @@ const Viewer = memo((props: any) => {
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
 
-  const selectMode = props.selectMode;
+  // const selectMode = props.selectMode;
+  const isSelecting = props.cursorDragMode === "baseline" || props.cursorDragMode === "gaussian";
   const setBaselinePoints = props.setBaselinePoints;
+  const gaussianGuess = props.gaussianGuess;
+  const setGaussianGuess = props.setGaussianGuess;
   const showSubtraction = props.showSubtraction;
   const isBaselineFitted = props.isBaselineFitted;
 
@@ -45,17 +48,52 @@ const Viewer = memo((props: any) => {
       )
     }
 
-    const data = chart?.getSelectedPoints().map(
-      (point) => { return [point.x, point.y] }
-    )
-
-    setBaselinePoints(data)
+    if (props.cursorDragMode === "baseline") {
+      const data = chart?.getSelectedPoints().map(
+        (point) => { return [point.x, point.y] }
+      )
+      setBaselinePoints(data);
+    }
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
     // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
 
     return false; // Don't zoom
+  }
+
+  const selectRange = (e: any) => {
+
+    // const chart = chartComponentRef.current?.chart;
+
+    // console.log(e)
+    // console.log(chart)
+    // console.log("chart option", chart?.options)
+
+    const xmin = e.xAxis[0].min;
+    const xmax = e.xAxis[0].max;
+    const ymin = e.yAxis[0].min;
+    const ymax = e.yAxis[0].max;
+
+    if (props.cursorDragMode === "gaussian") {
+      setGaussianGuess([...gaussianGuess, [(xmin + xmax) / 2, (xmax - xmin), ymax]]);
+    }
+
+    console.log(gaussianGuess);
+
+    // Fire a custom event
+    // console.log("highchart", Highcharts);
+    // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
+
+    return false; // Don't zoom
+  }
+
+  let selectionFunction;
+  if (props.cursorDragMode === "baseline") {
+    selectionFunction = selectPointsByDrag;
+  }
+  else if (props.cursorDragMode === "gaussian") {
+    selectionFunction = selectRange;
   }
 
   function unselectByClick() {
@@ -176,7 +214,7 @@ const Viewer = memo((props: any) => {
           type: 'scatter',
           lineWidth: 2,
           data: sourceData,
-          allowPointSelect: selectMode,
+          allowPointSelect: isSelecting,
           findNearestPointBy: 'xy',
         },
         // {
@@ -267,10 +305,10 @@ const Viewer = memo((props: any) => {
 
   }
 
-  if (selectMode === true && options.chart) {
+  if (isSelecting === true && options.chart) {
     options.chart.zoomType = 'xy';
     options.chart.events = {
-      selection: selectPointsByDrag,
+      selection: selectionFunction,
       click: unselectByClick,
     };
   }

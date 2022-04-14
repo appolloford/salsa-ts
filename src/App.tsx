@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Alignment, Button, Icon, Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from '@blueprintjs/core';
+import { Alignment, Button, Card, Collapse, Divider, FormGroup, HTMLTable, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, RadioGroup, Radio, Tabs, Tab, Text } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import Controller from './components/Controller';
 import salsaSourceDef from './python/salsasource.py';
@@ -37,12 +37,14 @@ function App() {
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
 
-  const [selectMode, setSelectMode] = useState(false);
+  // const [selectMode, setSelectMode] = useState(false);
+  const [cursorDragMode, setCursorDragMode] = useState("zoom");
 
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
   const [isBaselineFitted, setIsBaselineFitted] = useState(false);
   const [showSubtraction, setShowSubtraction] = useState(false);
 
+  const [gaussianGuess, setGaussianGuess] = useState<number[][]>([]);
   const [gaussianData, setGaussianData] = useState<number[]>([]);
 
   const [cursorX, setCursorX] = useState(0);
@@ -91,7 +93,9 @@ function App() {
     }
   }
 
-  const getBaselineFit = (points: number[][]) => {
+  const getBaselineFit = () => {
+
+    const points = baselinePoints;
 
     const xdata = points.map((item: number[]) => { return item[0] });
     const ydata = points.map((item: number[]) => { return item[1] });
@@ -134,30 +138,102 @@ function App() {
         fileName={newFileName}
         dataSource={dataSource}
         unit={unit}
-        selectMode={selectMode}
-        baselinePoints={baselinePoints}
+        // selectMode={selectMode}
+        cursorDragMode={cursorDragMode}
+        // baselinePoints={baselinePoints}
+        gaussianGuess={gaussianGuess}
         isBaselineFitted={isBaselineFitted}
         setBaselinePoints={setBaselinePoints}
+        setGaussianGuess={setGaussianGuess}
         showSubtraction={showSubtraction}
         gaussianData={gaussianData}
         setCursorX={setCursorX}
         setCursorY={setCursorY}
       />
-      <h4>X: {cursorX} Y: {cursorY}</h4>
-      <Controller
-        unit={unit}
-        setUnit={setUnit}
-        selectMode={selectMode}
-        setSelectMode={setSelectMode}
-        baselinePoints={baselinePoints}
-        clearBaseline={clearBaseline}
-        getBaselineFit={getBaselineFit}
-        showSubtraction={showSubtraction}
-        setShowSubtraction={setShowSubtraction}
-        getGaussianFit={getGaussianFit}
-      />
-    </div>
+      <div style={{ display: "flex" }}>
+        <Controller
+          style={{ flex: 1 }}
+          unit={unit}
+          setUnit={setUnit}
+          // selectMode={selectMode}
+          // setSelectMode={setSelectMode}
+          // baselinePoints={baselinePoints}
+          clearBaseline={clearBaseline}
+          getBaselineFit={getBaselineFit}
+          showSubtraction={showSubtraction}
+          setShowSubtraction={setShowSubtraction}
+          getGaussianFit={getGaussianFit}
+        />
+        <Divider />
+        <div style={{ flex: 1 }}>
+          <Tabs >
+            <Tab id="cursorpanel" title="Cursor Information" panel={
+              <CursorInforPanel xpos={cursorX} ypos={cursorY} cursorDragMode={cursorDragMode} onChange={setCursorDragMode} baselinePoints={baselinePoints} />
+            }></Tab>
+          </Tabs>
+        </div>
+      </div>
+    </div >
   );
+}
+
+const CursorInforPanel = (props: any) => {
+  const baselinePoints = props.baselinePoints;
+  const [showBaselinePoints, setShowBaselinePoints] = useState(false);
+
+  return (
+    <div style={{ textAlign: 'left' }}>
+      <Label>Position: ({props.xpos}, {props.ypos})</Label>
+      <FormGroup label="Drag Action:" inline={true}>
+        <RadioGroup
+          onChange={(e: any) => { console.log(e); props.onChange(e.target.defaultValue) }}
+          selectedValue={props.cursorDragMode}
+          inline={true}
+        >
+          <Radio label="Zoom" value="zoom" />
+          <Radio label="Baseline" value="baseline" />
+          <Radio label="Gaussian" value="gaussian" />
+        </RadioGroup>
+      </FormGroup>
+      <Button onClick={() => { setShowBaselinePoints(!showBaselinePoints) }}>Show Baseline Points</Button>
+      <Collapse isOpen={showBaselinePoints}>
+        <BaselinePointTable baselinePoints={baselinePoints} />
+      </Collapse>
+    </div>
+  )
+}
+
+
+const BaselinePointTable = (props: any) => {
+  const baselinePoints = props.baselinePoints;
+  return (
+    <Card>
+      <HTMLTable striped={true} condensed={true} interactive={true}>
+        {/* <caption>Selected Baseline Points</caption> */}
+        <thead style={{ display: "table" }}>
+          <tr>
+            <th style={{ width: 140 }}>Selected Points</th>
+            <th style={{ width: 140 }}>X coordinate</th>
+            <th style={{ width: 140 }}>Y coordinate</th>
+            {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
+          </tr>
+        </thead>
+        <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
+          {
+            baselinePoints.map((item: any, index: number) => {
+              return (
+                <tr style={{ display: "table" }} key={item[0]} onClick={() => { console.log("click table") }}>
+                  <td style={{ width: 140, textAlign: 'left' }}>{index}</td>
+                  <td style={{ width: 140, textAlign: 'left' }}>{item[0].toFixed(6)}</td>
+                  <td style={{ width: 140, textAlign: 'left' }}>{item[1].toFixed(6)}</td>
+                  {/* <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td> */}
+                </tr>);
+            })
+          }
+        </tbody>
+      </HTMLTable>
+    </Card>
+  )
 }
 
 export default App;
