@@ -3,6 +3,10 @@ import { Alignment, Button, Card, Collapse, Divider, FormGroup, HTMLTable, Icon,
 import Viewer from './components/Viewer';
 import Controller from './components/Controller';
 import salsaSourceDef from './python/salsasource.py';
+import { useSelector } from 'react-redux'
+import { store, RootState } from './redux/store'
+import { Provider } from 'react-redux'
+
 import './App.css';
 
 declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903)
@@ -47,8 +51,8 @@ function App() {
   const [gaussianGuess, setGaussianGuess] = useState<number[][]>([]);
   const [gaussianData, setGaussianData] = useState<number[]>([]);
 
-  const [cursorX, setCursorX] = useState(0);
-  const [cursorY, setCursorY] = useState(0);
+  // const [cursorX, setCursorX] = useState(0);
+  // const [cursorY, setCursorY] = useState(0);
 
   useEffect(() => {
     async function init() {
@@ -121,88 +125,90 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <Navbar>
-        <NavbarGroup align={Alignment.LEFT}>
-          <NavbarHeading>SalsaTS</NavbarHeading>
-          <NavbarDivider />
-          <Button disabled={!pyodideLoaded}>
-            <label htmlFor="input">
-              <input type="file" id="input" hidden onChange={(e: any) => { readFile(e.target.files[0]) }} />
-              <Icon icon="document" /> Upload
-            </label>
-          </Button>
-        </NavbarGroup>
-      </Navbar>
-      <Viewer
-        fileName={newFileName}
-        dataSource={dataSource}
-        unit={unit}
-        // selectMode={selectMode}
-        cursorDragMode={cursorDragMode}
-        // baselinePoints={baselinePoints}
-        gaussianGuess={gaussianGuess}
-        isBaselineFitted={isBaselineFitted}
-        setBaselinePoints={setBaselinePoints}
-        setGaussianGuess={setGaussianGuess}
-        showSubtraction={showSubtraction}
-        gaussianData={gaussianData}
-        setCursorX={setCursorX}
-        setCursorY={setCursorY}
-      />
-      <div style={{ display: "flex" }}>
-        <Controller
-          style={{ flex: 1 }}
+    <Provider store={store}>
+      <div className="App">
+        <Navbar>
+          <NavbarGroup align={Alignment.LEFT}>
+            <NavbarHeading>SalsaTS</NavbarHeading>
+            <NavbarDivider />
+            <Button disabled={!pyodideLoaded}>
+              <label htmlFor="input">
+                <input type="file" id="input" hidden onChange={(e: any) => { readFile(e.target.files[0]) }} />
+                <Icon icon="document" /> Upload
+              </label>
+            </Button>
+          </NavbarGroup>
+        </Navbar>
+        <Viewer
+          fileName={newFileName}
+          dataSource={dataSource}
           unit={unit}
-          setUnit={setUnit}
           // selectMode={selectMode}
-          // setSelectMode={setSelectMode}
+          cursorDragMode={cursorDragMode}
           // baselinePoints={baselinePoints}
-          clearBaseline={clearBaseline}
-          getBaselineFit={getBaselineFit}
+          gaussianGuess={gaussianGuess}
+          isBaselineFitted={isBaselineFitted}
+          setBaselinePoints={setBaselinePoints}
+          setGaussianGuess={setGaussianGuess}
           showSubtraction={showSubtraction}
-          setShowSubtraction={setShowSubtraction}
-          getGaussianFit={getGaussianFit}
+          gaussianData={gaussianData}
+        // setCursorX={setCursorX}
+        // setCursorY={setCursorY}
         />
-        <Divider />
-        <div style={{ flex: 1 }}>
-          <Tabs>
-            <Tab
-              id="cursorpanel"
-              title="Cursor Information"
-              panel={
-                <CursorInforPanel
-                  xpos={cursorX}
-                  ypos={cursorY}
-                  cursorDragMode={cursorDragMode}
-                  isBaselineFitted={isBaselineFitted}
-                  showSubtraction={showSubtraction}
-                  onChange={setCursorDragMode}
-                />
-              }
-            />
-            <Tab
-              id="baselinepoints"
-              title="Selected Baseline Points"
-              panel={
-                <BaselinePointTable
-                  baselinePoints={baselinePoints}
-                />
-              }
-            />
-            <Tab
-              id="gaussianranges"
-              title="Selected Gaussian Ranges"
-              panel={
-                <GaussianGuessTable
-                  gaussianGuess={gaussianGuess}
-                />
-              }
-            />
-          </Tabs>
+        <div style={{ display: "flex" }}>
+          <Controller
+            style={{ flex: 1 }}
+            unit={unit}
+            setUnit={setUnit}
+            // selectMode={selectMode}
+            // setSelectMode={setSelectMode}
+            // baselinePoints={baselinePoints}
+            clearBaseline={clearBaseline}
+            getBaselineFit={getBaselineFit}
+            showSubtraction={showSubtraction}
+            setShowSubtraction={setShowSubtraction}
+            getGaussianFit={getGaussianFit}
+          />
+          <Divider />
+          <div style={{ flex: 1 }}>
+            <Tabs>
+              <Tab
+                id="cursorpanel"
+                title="Cursor Information"
+                panel={
+                  <CursorInforPanel
+                    // xpos={cursorX}
+                    // ypos={cursorY}
+                    cursorDragMode={cursorDragMode}
+                    isBaselineFitted={isBaselineFitted}
+                    showSubtraction={showSubtraction}
+                    onChange={setCursorDragMode}
+                  />
+                }
+              />
+              <Tab
+                id="baselinepoints"
+                title="Selected Baseline Points"
+                panel={
+                  <BaselinePointTable
+                    baselinePoints={baselinePoints}
+                  />
+                }
+              />
+              <Tab
+                id="gaussianranges"
+                title="Selected Gaussian Ranges"
+                panel={
+                  <GaussianGuessTable
+                    gaussianGuess={gaussianGuess}
+                  />
+                }
+              />
+            </Tabs>
+          </div>
         </div>
-      </div>
-    </div >
+      </div >
+    </Provider>
   );
 }
 
@@ -210,9 +216,11 @@ const CursorInforPanel = (props: any) => {
   const isBaselineFitted = props.isBaselineFitted;
   const showSubtraction = props.showSubtraction;
 
+  const position = useSelector((state: RootState) => state.cursor.position)
   return (
     <div style={{ textAlign: 'left' }}>
-      <Label>Position: ({props.xpos}, {props.ypos})</Label>
+      <Label>Position: ({position[0]}, {position[1]})</Label>
+      {/* <Label>Position: ({props.xpos}, {props.ypos})</Label> */}
       <FormGroup label="Drag Action:" inline={true}>
         <RadioGroup
           onChange={(e: any) => { console.log(e); props.onChange(e.target.defaultValue) }}

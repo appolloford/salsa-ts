@@ -1,4 +1,7 @@
 import { useRef, useState, memo } from 'react';
+import { useSelector, useDispatch } from 'react-redux'
+import { setPosition } from '../redux/cursorSlice';
+import { RootState } from '../redux/store';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
@@ -126,8 +129,8 @@ const Viewer = memo((props: any) => {
     setBaselinePoints([]);
   }
 
-  const setCursorX = props.setCursorX;
-  const setCursorY = props.setCursorY;
+  // const setCursorX = props.setCursorX;
+  // const setCursorY = props.setCursorY;
 
   // const addBaselinePoints = (point: Array<number>) => {
   //   setBaselinePoints([...baselinePoints, point]);
@@ -370,10 +373,12 @@ const Viewer = memo((props: any) => {
     return { xPos, yPos };
   }
 
+  const dispatch = useDispatch()
   const handleMouseMove = (event: any) => {
     const { xPos, yPos } = getCursorPos(event);
-    setCursorX(xPos);
-    setCursorY(yPos);
+    dispatch(setPosition([xPos, yPos]))
+    // setCursorX(xPos);
+    // setCursorY(yPos);
   };
 
   return (
