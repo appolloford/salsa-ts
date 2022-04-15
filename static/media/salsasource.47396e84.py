@@ -91,7 +91,7 @@ class SALSASource:
     ) -> np.ndarray:
 
         if not xdata or not ydata:
-            self._baseline = []
+            self._baseline = None
 
         else:
             poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
@@ -105,9 +105,13 @@ class SALSASource:
 
         return self._baseline
 
-    def fit_gaussian(self, unit: str=None, ngaussian: int=1) -> np.ndarray:
+    def fit_gaussian(self, unit: str=None, ngaussian: int=0, xylim: list[list[float]] = None) -> np.ndarray:
 
         xdata = self.axisdata(1, unit=unit)
+
+        if not ngaussian:
+            self._gaussian = np.zeros(xdata.shape)
+            return self._gaussian
 
         if self.baseline is None:
             return np.zeros(xdata.shape) 
@@ -117,8 +121,16 @@ class SALSASource:
         xdatarange = xdata.max() - xdata.min()
 
         p0 = [xdata.mean(), xdatarange / 2.0, ydata.max()] * ngaussian
-        lbound = [xdata.min(), 0.0, ydata.min()] * ngaussian
-        ubound = [xdata.max(), xdatarange, ydata.max()] * ngaussian
+        lbound = [xdata.min(), 0.0, 0.5*ydata.min()] * ngaussian
+        ubound = [xdata.max(), xdatarange, 2.0*ydata.max()] * ngaussian
+
+        if xylim:
+            for idx, lim in enumerate(xylim):
+                xmin, xmax, ymin, ymax = lim
+                if idx < ngaussian:
+                    p0[idx*3], p0[idx*3+1], p0[idx*3+2] = (xmin+xmax)/2.0, (xmax-xmin), ymax
+                    lbound[idx*3], lbound[idx*3+1], lbound[idx*3+2] = xmin, 0.0, ymin
+                    ubound[idx*3], ubound[idx*3+1], ubound[idx*3+2] = xmax, 2.0*(xmax-xmin), 2.0*ymax
 
         popt, pcov = curve_fit(_gaussian_fitting_func, xdata, ydata, p0=p0, bounds=(lbound, ubound))
         self._gaussian = _gaussian_fitting_func(xdata, *popt)
