@@ -116,7 +116,7 @@ function App() {
   }
 
   const getGaussianFit = (nGaussian: number) => {
-    const result = dataSource?.fit_gaussian(unit, nGaussian).toJs();
+    const result = dataSource?.fit_gaussian(unit, nGaussian, gaussianGuess).toJs();
     setGaussianData(result);
   }
 

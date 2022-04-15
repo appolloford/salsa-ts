@@ -22,6 +22,8 @@ const Viewer = memo((props: any) => {
 
   const gaussianData = props.gaussianData;
 
+  const [rectangles, setRectangles] = useState<any[]>([]);
+
   const selectPointsByDrag = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -75,11 +77,29 @@ const Viewer = memo((props: any) => {
     const ymin = e.yAxis[0].min;
     const ymax = e.yAxis[0].max;
 
+    const xminpix = chart?.xAxis[0].toPixels(xmin, false) || 0;
+    const xmaxpix = chart?.xAxis[0].toPixels(xmax, false) || 0;
+    const yminpix = chart?.yAxis[0].toPixels(ymin, false) || 0;
+    const ymaxpix = chart?.yAxis[0].toPixels(ymax, false) || 0;
+    const width = xmaxpix - xminpix;
+    const height = yminpix - ymaxpix;
+
+    console.log("rect params", xminpix, ymaxpix, width, height)
+
+    const rectangle = chart?.renderer.rect(xminpix, ymaxpix, width, height, 2)
+      .attr({
+        "stroke-width": 2,
+        "stroke": 'red',
+        "fill": 'black',
+        "fill-opacity": 0.1,
+        "zIndex": 3
+      })
+      .add();
+
     if (props.cursorDragMode === "gaussian") {
       setGaussianGuess([...gaussianGuess, [xmin, xmax, ymin, ymax]]);
+      setRectangles([...rectangles, rectangle]);
     }
-
-    console.log(gaussianGuess);
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -308,6 +328,7 @@ const Viewer = memo((props: any) => {
 
   if (isSelecting === true && options.chart) {
     options.chart.zoomType = 'xy';
+    options.chart.renderTo = chart?.container;
     options.chart.events = {
       selection: selectionFunction,
       click: unselectByClick,
