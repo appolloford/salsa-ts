@@ -166,19 +166,39 @@ function App() {
         />
         <Divider />
         <div style={{ flex: 1 }}>
-          <Tabs >
-            <Tab id="cursorpanel" title="Cursor Information" panel={
-              <CursorInforPanel
-                xpos={cursorX}
-                ypos={cursorY}
-                cursorDragMode={cursorDragMode}
-                isBaselineFitted={isBaselineFitted}
-                baselinePoints={baselinePoints}
-                showSubtraction={showSubtraction}
-                gaussianGuess={gaussianGuess}
-                onChange={setCursorDragMode}
-              />
-            }></Tab>
+          <Tabs>
+            <Tab
+              id="cursorpanel"
+              title="Cursor Information"
+              panel={
+                <CursorInforPanel
+                  xpos={cursorX}
+                  ypos={cursorY}
+                  cursorDragMode={cursorDragMode}
+                  isBaselineFitted={isBaselineFitted}
+                  showSubtraction={showSubtraction}
+                  onChange={setCursorDragMode}
+                />
+              }
+            />
+            <Tab
+              id="baselinepoints"
+              title="Selected Baseline Points"
+              panel={
+                <BaselinePointTable
+                  baselinePoints={baselinePoints}
+                />
+              }
+            />
+            <Tab
+              id="gaussianranges"
+              title="Selected Gaussian Ranges"
+              panel={
+                <GaussianGuessTable
+                  gaussianGuess={gaussianGuess}
+                />
+              }
+            />
           </Tabs>
         </div>
       </div>
@@ -188,11 +208,7 @@ function App() {
 
 const CursorInforPanel = (props: any) => {
   const isBaselineFitted = props.isBaselineFitted;
-  const baselinePoints = props.baselinePoints;
   const showSubtraction = props.showSubtraction;
-  const gaussianGuess = props.gaussianGuess;
-  const [showBaselinePoints, setShowBaselinePoints] = useState(false);
-  const [showGaussianGuess, setShowGaussianGuess] = useState(false);
 
   return (
     <div style={{ textAlign: 'left' }}>
@@ -208,14 +224,6 @@ const CursorInforPanel = (props: any) => {
           <Radio label="Gaussian" value="gaussian" disabled={!isBaselineFitted || !showSubtraction} />
         </RadioGroup>
       </FormGroup>
-      <Button small onClick={() => { setShowBaselinePoints(!showBaselinePoints) }}>Show Baseline Points</Button>
-      <Collapse isOpen={showBaselinePoints}>
-        <BaselinePointTable baselinePoints={baselinePoints} />
-      </Collapse>
-      <Button small onClick={() => { setShowGaussianGuess(!showGaussianGuess) }}>Show Gaussian Ranges</Button>
-      <Collapse isOpen={showGaussianGuess}>
-        <GaussianGuessTable gaussianGuess={gaussianGuess} />
-      </Collapse>
     </div>
   )
 }
@@ -264,8 +272,8 @@ const GaussianGuessTable = (props: any) => {
           <thead style={{ display: "table" }}>
             <tr>
               <th style={{ width: 140 }}>Selected Range</th>
-              <th style={{ width: 140 }}>X range</th>
-              <th style={{ width: 140 }}>Y range</th>
+              <th style={{ width: 200 }}>X range</th>
+              <th style={{ width: 200 }}>Y range</th>
               {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
             </tr>
           </thead>
@@ -275,8 +283,8 @@ const GaussianGuessTable = (props: any) => {
                 return (
                   <tr style={{ display: "table" }} key={item[0]} onClick={() => { console.log("click table") }}>
                     <td style={{ width: 140, textAlign: 'left' }}>{index}</td>
-                    <td style={{ width: 140, textAlign: 'left' }}>({item[0].toFixed(6)}, {item[1].toFixed(6)})</td>
-                    <td style={{ width: 140, textAlign: 'left' }}>({item[2].toFixed(6)}, {item[3].toFixed(6)})</td>
+                    <td style={{ width: 200, textAlign: 'left' }}>({item[0].toFixed(6)}, {item[1].toFixed(6)})</td>
+                    <td style={{ width: 200, textAlign: 'left' }}>({item[2].toFixed(6)}, {item[3].toFixed(6)})</td>
                     {/* <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td> */}
                   </tr>);
               })
