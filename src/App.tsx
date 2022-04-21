@@ -3,9 +3,9 @@ import { Alignment, Button, Card, Collapse, Divider, FormGroup, HTMLTable, Icon,
 import Viewer from './components/Viewer';
 import Controller from './components/Controller';
 import salsaSourceDef from './python/salsasource.py';
-import { useSelector } from 'react-redux'
+import { Provider, useSelector, useDispatch } from 'react-redux'
 import { store, RootState } from './redux/store'
-import { Provider } from 'react-redux'
+import { setDrag } from './redux/cursorSlice'
 
 import './App.css';
 
@@ -41,18 +41,12 @@ function App() {
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
 
-  // const [selectMode, setSelectMode] = useState(false);
-  const [cursorDragMode, setCursorDragMode] = useState("zoom");
-
   const [baselinePoints, setBaselinePoints] = useState<number[][]>([]);
   const [isBaselineFitted, setIsBaselineFitted] = useState(false);
   const [showSubtraction, setShowSubtraction] = useState(false);
 
   const [gaussianGuess, setGaussianGuess] = useState<number[][]>([]);
   const [gaussianData, setGaussianData] = useState<number[]>([]);
-
-  // const [cursorX, setCursorX] = useState(0);
-  // const [cursorY, setCursorY] = useState(0);
 
   useEffect(() => {
     async function init() {
@@ -143,8 +137,6 @@ function App() {
           fileName={newFileName}
           dataSource={dataSource}
           unit={unit}
-          // selectMode={selectMode}
-          cursorDragMode={cursorDragMode}
           // baselinePoints={baselinePoints}
           gaussianGuess={gaussianGuess}
           isBaselineFitted={isBaselineFitted}
@@ -152,16 +144,12 @@ function App() {
           setGaussianGuess={setGaussianGuess}
           showSubtraction={showSubtraction}
           gaussianData={gaussianData}
-        // setCursorX={setCursorX}
-        // setCursorY={setCursorY}
         />
         <div style={{ display: "flex" }}>
           <Controller
             style={{ flex: 1 }}
             unit={unit}
             setUnit={setUnit}
-            // selectMode={selectMode}
-            // setSelectMode={setSelectMode}
             // baselinePoints={baselinePoints}
             clearBaseline={clearBaseline}
             getBaselineFit={getBaselineFit}
@@ -177,12 +165,8 @@ function App() {
                 title="Cursor Information"
                 panel={
                   <CursorInforPanel
-                    // xpos={cursorX}
-                    // ypos={cursorY}
-                    cursorDragMode={cursorDragMode}
                     isBaselineFitted={isBaselineFitted}
                     showSubtraction={showSubtraction}
-                    onChange={setCursorDragMode}
                   />
                 }
               />
@@ -216,15 +200,16 @@ const CursorInforPanel = (props: any) => {
   const isBaselineFitted = props.isBaselineFitted;
   const showSubtraction = props.showSubtraction;
 
-  const position = useSelector((state: RootState) => state.cursor.position)
+  const position = useSelector((state: RootState) => state.cursor.position);
+  const drag = useSelector((state: RootState) => state.cursor.drag);
+  const dispatch = useDispatch();
   return (
     <div style={{ textAlign: 'left' }}>
       <Label>Position: ({position[0]}, {position[1]})</Label>
-      {/* <Label>Position: ({props.xpos}, {props.ypos})</Label> */}
       <FormGroup label="Drag Action:" inline={true}>
         <RadioGroup
-          onChange={(e: any) => { console.log(e); props.onChange(e.target.defaultValue) }}
-          selectedValue={props.cursorDragMode}
+          onChange={(e: any) => { dispatch(setDrag(e.target.defaultValue)) }}
+          selectedValue={drag}
           inline={true}
         >
           <Radio label="Zoom" value="zoom" />

@@ -12,11 +12,14 @@ require("highcharts/modules/draggable-points")(Highcharts);
 
 const Viewer = memo((props: any) => {
 
+  const dispatch = useDispatch();
+  const drag = useSelector((state: RootState) => state.cursor.drag);
+
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
 
   // const selectMode = props.selectMode;
-  const isSelecting = props.cursorDragMode === "baseline" || props.cursorDragMode === "gaussian";
+  const isSelecting = drag === "baseline" || drag === "gaussian";
   const setBaselinePoints = props.setBaselinePoints;
   const gaussianGuess = props.gaussianGuess;
   const setGaussianGuess = props.setGaussianGuess;
@@ -27,7 +30,7 @@ const Viewer = memo((props: any) => {
 
   const [rectangles, setRectangles] = useState<any[]>([]);
 
-  const selectPointsByDrag = (e: any) => {
+  const selectPoints = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
 
@@ -53,12 +56,10 @@ const Viewer = memo((props: any) => {
       )
     }
 
-    if (props.cursorDragMode === "baseline") {
-      const data = chart?.getSelectedPoints().map(
-        (point) => { return [point.x, point.y] }
-      )
-      setBaselinePoints(data);
-    }
+    const data = chart?.getSelectedPoints().map(
+      (point) => { return [point.x, point.y] }
+    )
+    setBaselinePoints(data);
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -99,10 +100,8 @@ const Viewer = memo((props: any) => {
       })
       .add();
 
-    if (props.cursorDragMode === "gaussian") {
-      setGaussianGuess([...gaussianGuess, [xmin, xmax, ymin, ymax]]);
-      setRectangles([...rectangles, rectangle]);
-    }
+    setGaussianGuess([...gaussianGuess, [xmin, xmax, ymin, ymax]]);
+    setRectangles([...rectangles, rectangle]);
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -112,10 +111,10 @@ const Viewer = memo((props: any) => {
   }
 
   let selectionFunction;
-  if (props.cursorDragMode === "baseline") {
-    selectionFunction = selectPointsByDrag;
+  if (drag === "baseline") {
+    selectionFunction = selectPoints;
   }
-  else if (props.cursorDragMode === "gaussian") {
+  else if (drag === "gaussian") {
     selectionFunction = selectRange;
   }
 
@@ -373,10 +372,9 @@ const Viewer = memo((props: any) => {
     return { xPos, yPos };
   }
 
-  const dispatch = useDispatch()
   const handleMouseMove = (event: any) => {
     const { xPos, yPos } = getCursorPos(event);
-    dispatch(setPosition([xPos, yPos]))
+    dispatch(setPosition([xPos, yPos]));
     // setCursorX(xPos);
     // setCursorY(yPos);
   };
