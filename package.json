@@ -4,7 +4,8 @@
   "private": true,
   "homepage": "https://appolloford.github.io/salsa-ts",
   "dependencies": {
-    "@blueprintjs/core": "^3.50.2",
+    "@blueprintjs/core": "^4.2.0",
+    "@blueprintjs/table": "^4.1.3",
     "@reduxjs/toolkit": "^1.8.1",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",

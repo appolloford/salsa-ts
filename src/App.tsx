@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Alignment, Button, Card, Collapse, Divider, FormGroup, HTMLTable, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, RadioGroup, Radio, Tabs, Tab, Text } from '@blueprintjs/core';
+import { Cell, Column, Table2 } from "@blueprintjs/table";
 import Viewer from './components/Viewer';
 import Controller from './components/Controller';
 import salsaSourceDef from './python/salsasource.py';
@@ -224,32 +225,18 @@ const CursorInforPanel = (props: any) => {
 
 const BaselinePointTable = (props: any) => {
   const baselinePoints = props.baselinePoints;
+  const pointX = (rowIndex: number) => (
+    <Cell>{`${baselinePoints[rowIndex] ? (baselinePoints[rowIndex][0]).toFixed(6) : 0.0}`}</Cell>
+  );
+  const pointY = (rowIndex: number) => (
+    <Cell>{`${baselinePoints[rowIndex] ? (baselinePoints[rowIndex][1]).toFixed(6) : 0.0}`}</Cell>
+  );
   return (
-    <Card>
-      <HTMLTable striped={true} condensed={true} interactive={true}>
-        {/* <caption>Selected Baseline Points</caption> */}
-        <thead style={{ display: "table" }}>
-          <tr>
-            <th style={{ width: 140 }}>Selected Points</th>
-            <th style={{ width: 140 }}>X coordinate</th>
-            <th style={{ width: 140 }}>Y coordinate</th>
-            {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
-          </tr>
-        </thead>
-        <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
-          {
-            baselinePoints.map((item: any, index: number) => {
-              return (
-                <tr style={{ display: "table" }} key={item[0]} onClick={() => { console.log("click table") }}>
-                  <td style={{ width: 140, textAlign: 'left' }}>{index}</td>
-                  <td style={{ width: 140, textAlign: 'left' }}>{item[0].toFixed(6)}</td>
-                  <td style={{ width: 140, textAlign: 'left' }}>{item[1].toFixed(6)}</td>
-                  {/* <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td> */}
-                </tr>);
-            })
-          }
-        </tbody>
-      </HTMLTable>
+    <Card style={{ display: "block", overflow: "auto", width: 600, height: 150 }}>
+      <Table2 numRows={baselinePoints.length} enableGhostCells={true}>
+        <Column name="X coordinate" cellRenderer={pointX} />
+        <Column name="Y coordinate" cellRenderer={pointY} />
+      </Table2>
     </Card>
   )
 }
@@ -257,35 +244,25 @@ const BaselinePointTable = (props: any) => {
 const GaussianGuessTable = (props: any) => {
   const gaussianGuess = props.gaussianGuess;
 
+  const rangeX = (rowIndex: number) => (
+    <Cell>
+      ({`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][0]).toFixed(6) : 0.0}`},
+      {`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][1]).toFixed(6) : 0.0}`})
+    </Cell>
+  );
+  const rangeY = (rowIndex: number) => (
+    <Cell>
+      ({`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][2]).toFixed(6) : 0.0}`},
+      {`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][3]).toFixed(6) : 0.0}`})
+    </Cell>
+  );
   return (
-    <>
-      <Card>
-        <HTMLTable striped={true} condensed={true} interactive={true}>
-          {/* <caption>Selected Baseline Points</caption> */}
-          <thead style={{ display: "table" }}>
-            <tr>
-              <th style={{ width: 140 }}>Selected Range</th>
-              <th style={{ width: 200 }}>X range</th>
-              <th style={{ width: 200 }}>Y range</th>
-              {/* <th><Button icon="trash" text="Clear All" onClick={() => { setBaselinePoints([]) }} /></th> */}
-            </tr>
-          </thead>
-          <tbody style={{ display: "block", overflow: "auto", height: 150 }}>
-            {
-              gaussianGuess.map((item: any, index: number) => {
-                return (
-                  <tr style={{ display: "table" }} key={item[0]} onClick={() => { console.log("click table") }}>
-                    <td style={{ width: 140, textAlign: 'left' }}>{index}</td>
-                    <td style={{ width: 200, textAlign: 'left' }}>({item[0].toFixed(6)}, {item[1].toFixed(6)})</td>
-                    <td style={{ width: 200, textAlign: 'left' }}>({item[2].toFixed(6)}, {item[3].toFixed(6)})</td>
-                    {/* <td><Button icon="cross" minimal={true} onClick={() => { setBaselinePoints(baselinePoints.filter(ele => ele !== item)) }} /></td> */}
-                  </tr>);
-              })
-            }
-          </tbody>
-        </HTMLTable>
-      </Card>
-    </>
+    <Card style={{ display: "block", overflow: "auto", width: 600, height: 150 }}>
+      <Table2 numRows={gaussianGuess.length} enableGhostCells={true} columnWidths={[300, 200]}>
+        <Column name="X range" cellRenderer={rangeX} />
+        <Column name="Y range" cellRenderer={rangeY} />
+      </Table2>
+    </Card>
   )
 }
 
