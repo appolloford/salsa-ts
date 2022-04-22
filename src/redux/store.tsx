@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
-import cursorRuducer from './cursorSlice'
+import cursorReducer from './cursorSlice'
+import baselineReducer from './baselineSlice'
 
 export const store = configureStore({
   reducer: {
-    cursor: cursorRuducer
+    cursor: cursorReducer,
+    baseline: baselineReducer
   },
 })
 

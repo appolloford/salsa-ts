@@ -1,10 +1,13 @@
 import { useRef, useState, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
-import { setPosition } from '../redux/cursorSlice';
 import { RootState } from '../redux/store';
+import { setDrag } from '../redux/cursorSlice';
+import { setPosition } from '../redux/cursorSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
+import { Button, ButtonGroup, Divider, NumericInput, Popover } from '@blueprintjs/core';
+import { setDataPoints, setFitValues } from '../redux/baselineSlice';
 
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
@@ -14,21 +17,22 @@ const Viewer = memo((props: any) => {
 
   const dispatch = useDispatch();
   const drag = useSelector((state: RootState) => state.cursor.drag);
+  const isSelecting = drag === "baseline" || drag === "gaussian";
+
+  const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+  const isBaselineFitted = baselineFit.length > 0;
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
 
-  // const selectMode = props.selectMode;
-  const isSelecting = drag === "baseline" || drag === "gaussian";
-  const setBaselinePoints = props.setBaselinePoints;
   const gaussianGuess = props.gaussianGuess;
   const setGaussianGuess = props.setGaussianGuess;
-  const showSubtraction = props.showSubtraction;
-  const isBaselineFitted = props.isBaselineFitted;
 
   const gaussianData = props.gaussianData;
+  const getGaussianFit = props.getGaussianFit;
 
   const [rectangles, setRectangles] = useState<any[]>([]);
+  const [showSubtraction, setShowSubtraction] = useState(false);
 
   const selectPoints = (e: any) => {
 
@@ -57,9 +61,10 @@ const Viewer = memo((props: any) => {
     }
 
     const data = chart?.getSelectedPoints().map(
-      (point) => { return [point.x, point.y] }
-    )
-    setBaselinePoints(data);
+      (point) => { return [point.x || 0.0, point.y || 0.0] }
+    ) || [];
+
+    dispatch(setDataPoints(data));
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -125,7 +130,7 @@ const Viewer = memo((props: any) => {
         point.select(false);
       })
     }
-    setBaselinePoints([]);
+    dispatch(setDataPoints([]));
   }
 
   // const setCursorX = props.setCursorX;
@@ -207,9 +212,8 @@ const Viewer = memo((props: any) => {
     });
 
     if (isBaselineFitted === true) {
-      const ydata = dataSource.baseline.toJs();
       baselineData.forEach((item: number[], i: number) => {
-        item[1] = ydata[i];
+        item[1] = baselineFit[i];
       });
     }
 
@@ -380,7 +384,7 @@ const Viewer = memo((props: any) => {
   };
 
   return (
-    <>
+    <div>
       <HighchartsReact
         highcharts={Highcharts}
         options={options}
@@ -390,9 +394,109 @@ const Viewer = memo((props: any) => {
           // onDoubleClick: handleDoubleClick,
         }}
       />
-    </>
+      <Toolbar
+        unit={unit}
+        dataSource={dataSource}
+        showSubtraction={showSubtraction}
+        setShowSubtraction={setShowSubtraction}
+        getGaussianFit={getGaussianFit}
+      />
+    </div>
   );
 });
 
+const Toolbar = (props: any) => {
+  const dispatch = useDispatch();
+  const drag = useSelector((state: RootState) => state.cursor.drag);
+  const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints);
+  const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+  const isBaselineFitted = baselineFit.length > 0;
+  const xdata = baselinePoints.map((item: number[]) => { return item[0] });
+  const ydata = baselinePoints.map((item: number[]) => { return item[1] });
+
+  const dataSource = props.dataSource;
+  const showSubtraction = props.showSubtraction;
+  const setShowSubtraction = props.setShowSubtraction;
+  const getGaussianFit = props.getGaussianFit;
+  const unit = props.unit;
+  const [order, setOrder] = useState(0);
+  const [isFitting, setIsFitting] = useState(false);
+
+  const fitBaseline = (x: number[], y: number[]) => {
+    const result = dataSource?.fit_baseline(x, y, unit).toJs();
+    const baselineFit = [].slice.call(result);
+    dispatch(setFitValues(baselineFit));
+  }
+
+  return (
+    <div style={{ display: "flex" }}>
+      <ButtonGroup>
+        <Button
+          icon="zoom-in"
+          small={true}
+          active={drag === "zoom"}
+          onClick={() => { dispatch(setDrag("zoom")) }}
+        />
+        <Button
+          icon="widget-button"
+          small={true}
+          active={drag === "baseline"}
+          disabled={showSubtraction}
+          onClick={() => { dispatch(setDrag("baseline")) }}
+        />
+        <Button
+          icon="widget"
+          small={true}
+          active={drag === "gaussian"}
+          disabled={!isBaselineFitted || !showSubtraction}
+          onClick={() => { dispatch(setDrag("gaussian")) }}
+        />
+      </ButtonGroup>
+      <Divider />
+      <Button
+        icon="bring-data"
+        small={true}
+        active={showSubtraction}
+        onClick={() => {
+          setShowSubtraction(!showSubtraction)
+          dispatch(setDrag("zoom"))
+        }}
+      />
+      <Button
+        icon="regression-chart"
+        small={true}
+        disabled={!baselinePoints.length}
+        onClick={() => { fitBaseline(xdata, ydata) }}
+      />
+      <Button
+        icon="delete"
+        small={true}
+        onClick={() => {
+          dispatch(setDataPoints([]));
+          fitBaseline([], []);
+        }}
+      />
+      <Divider />
+      <Button
+        icon="step-chart"
+        small={true}
+        active={isFitting}
+        onClick={() => { setIsFitting(!isFitting) }}
+      />
+      <Popover>
+        <Button text={order} small={true} />
+        <NumericInput
+          style={{ width: 30 }}
+          value={order}
+          min={1}
+          onValueChange={(value) => {
+            setOrder(value);
+            if (isFitting) getGaussianFit(value);
+          }}
+        />
+      </Popover>
+    </div>
+  )
+}
 
 export default Viewer;

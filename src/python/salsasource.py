@@ -94,7 +94,7 @@ class SALSASource:
     ) -> np.ndarray:
 
         if not xdata or not ydata:
-            self._baseline = None
+            self._baseline = []
 
         else:
             poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
