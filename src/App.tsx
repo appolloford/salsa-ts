@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Alignment, Button, Card, Collapse, Divider, FormGroup, HTMLTable, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, RadioGroup, Radio, Tabs, Tab, Text } from '@blueprintjs/core';
+import { Alignment, Button, Card, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Tabs, Tab } from '@blueprintjs/core';
 import { Cell, Column, Table2 } from "@blueprintjs/table";
 import Viewer from './components/Viewer';
 import salsaSourceDef from './python/salsasource.py';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from './redux/store'
-import { setFitValues } from './redux/baselineSlice';
 
 import './App.css';
 
@@ -111,6 +110,7 @@ function App() {
         fileName={newFileName}
         dataSource={dataSource}
         unit={unit}
+        setUnit={setUnit}
         gaussianGuess={gaussianGuess}
         setGaussianGuess={setGaussianGuess}
         gaussianData={gaussianData}
@@ -154,7 +154,7 @@ const CursorInforPanel = (props: any) => {
   const position = useSelector((state: RootState) => state.cursor.position);
   return (
     <div style={{ textAlign: 'left' }}>
-      <Label>Position: ({position[0]}, {position[1]})</Label>
+      <Label>Position: ({position[0].toFixed(6)}, {position[1].toFixed(6)})</Label>
     </div>
   )
 }

@@ -1,13 +1,12 @@
 import { useRef, useState, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
-import { setDrag } from '../redux/cursorSlice';
-import { setPosition } from '../redux/cursorSlice';
+import { setDrag, setPosition } from '../redux/cursorSlice';
+import { setDataPoints, setFitValues } from '../redux/baselineSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
-import { Button, ButtonGroup, Divider, NumericInput, Popover } from '@blueprintjs/core';
-import { setDataPoints, setFitValues } from '../redux/baselineSlice';
+import { Button, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Popover } from '@blueprintjs/core';
 
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
@@ -30,6 +29,11 @@ const Viewer = memo((props: any) => {
 
   const gaussianData = props.gaussianData;
   const getGaussianFit = props.getGaussianFit;
+
+  const fileName = props.fileName;
+  const dataSource = props.dataSource;
+  const unit = props.unit;
+  const setUnit = props.setUnit;
 
   const [rectangles, setRectangles] = useState<any[]>([]);
   const [showSubtraction, setShowSubtraction] = useState(false);
@@ -157,9 +161,6 @@ const Viewer = memo((props: any) => {
   //   //   x => x[1] == point)[0][0]] = point);
   // }
 
-  const fileName = props.fileName;
-  const dataSource = props.dataSource;
-  const unit = props.unit;
   let xdisplayUnit;
 
   if (unit === "freq-k") {
@@ -303,7 +304,7 @@ const Viewer = memo((props: any) => {
     //   }
     // ];
 
-    const subtitle = `${header.get("CTYPE2")}: ${header.get("CRVAL2")}, ${header.get("CTYPE3")}: ${header.get("CRVAL3")}`;
+    const subtitle = `${header.get("CTYPE2")}: ${header.get("CRVAL2").toFixed(6)}, ${header.get("CTYPE3")}: ${header.get("CRVAL3").toFixed(6)}`;
 
     options.title = {
       text: fileName
@@ -396,6 +397,7 @@ const Viewer = memo((props: any) => {
       />
       <Toolbar
         unit={unit}
+        setUnit={setUnit}
         dataSource={dataSource}
         showSubtraction={showSubtraction}
         setShowSubtraction={setShowSubtraction}
@@ -419,6 +421,7 @@ const Toolbar = (props: any) => {
   const setShowSubtraction = props.setShowSubtraction;
   const getGaussianFit = props.getGaussianFit;
   const unit = props.unit;
+  const setUnit = props.setUnit;
   const [order, setOrder] = useState(0);
   const [isFitting, setIsFitting] = useState(false);
 
@@ -481,7 +484,15 @@ const Toolbar = (props: any) => {
         icon="step-chart"
         small={true}
         active={isFitting}
-        onClick={() => { setIsFitting(!isFitting) }}
+        onClick={() => {
+          if (isFitting) {
+            getGaussianFit(0);
+          }
+          else {
+            getGaussianFit(order);
+          }
+          setIsFitting(!isFitting);
+        }}
       />
       <Popover>
         <Button text={order} small={true} />
@@ -495,6 +506,16 @@ const Toolbar = (props: any) => {
           }}
         />
       </Popover>
+      <FormGroup style={{ marginLeft: "auto", height: 10 }} label="x-axis unit:" inline={true}>
+        <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
+          <option value="freq">Frequency (Hz)</option>
+          <option value="freq-k">Frequency (kHz)</option>
+          <option value="freq-m">Frequency (MHz)</option>
+          <option value="freq-g">Frequency (GHz)</option>
+          <option value="chan">Channel</option>
+          <option value="vel">Velocity (km/s)</option>
+        </HTMLSelect>
+      </FormGroup>
     </div>
   )
 }
