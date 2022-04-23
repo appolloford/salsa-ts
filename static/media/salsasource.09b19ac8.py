@@ -25,6 +25,9 @@ class SALSASource:
     def __init__(self, bytesfile) -> None:
         self.content = fits.open(BytesIO(bytesfile), mode="readonly")
         self._baseline = None
+        self._gaussian = None
+        self._gaussian_params = None
+        self._gaussian_superpos = None
 
     @property
     def header(self) -> dict:
@@ -91,7 +94,7 @@ class SALSASource:
     ) -> np.ndarray:
 
         if not xdata or not ydata:
-            self._baseline = None
+            self._baseline = []
 
         else:
             poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
@@ -105,7 +108,12 @@ class SALSASource:
 
         return self._baseline
 
-    def fit_gaussian(self, unit: str=None, ngaussian: int=0, xylim: list[list[float]] = None) -> np.ndarray:
+    def fit_gaussian(
+        self, 
+        unit: str = None, 
+        ngaussian: int = 0, 
+        xylim: list[list[float]] = None,
+    ) -> np.ndarray:
 
         xdata = self.axisdata(1, unit=unit)
 
@@ -120,7 +128,9 @@ class SALSASource:
 
         xdatarange = xdata.max() - xdata.min()
 
+        # initial guess
         p0 = [xdata.mean(), xdatarange / 2.0, ydata.max()] * ngaussian
+        # lower/upper bound for the mean, sigma, and amp of each gaussian
         lbound = [xdata.min(), 0.0, 0.5*ydata.min()] * ngaussian
         ubound = [xdata.max(), xdatarange, 2.0*ydata.max()] * ngaussian
 
@@ -128,19 +138,30 @@ class SALSASource:
             for idx, lim in enumerate(xylim):
                 xmin, xmax, ymin, ymax = lim
                 if idx < ngaussian:
-                    p0[idx*3], p0[idx*3+1], p0[idx*3+2] = (xmin+xmax)/2.0, (xmax-xmin), ymax
-                    lbound[idx*3], lbound[idx*3+1], lbound[idx*3+2] = xmin, 0.0, ymin
-                    ubound[idx*3], ubound[idx*3+1], ubound[idx*3+2] = xmax, 2.0*(xmax-xmin), 2.0*ymax
+                    p0[idx*3:(idx+1)*3] = [(xmin+xmax)/2.0, (xmax-xmin), ymax]
+                    lbound[idx*3:(idx+1)*3] = [xmin, 0.0, ymin]
+                    ubound[idx*3:(idx+1)*3] = [xmax, 2.0*(xmax-xmin), 2.0*ymax]
 
         popt, pcov = curve_fit(_gaussian_fitting_func, xdata, ydata, p0=p0, bounds=(lbound, ubound))
-        self._gaussian = _gaussian_fitting_func(xdata, *popt)
 
-        return self._gaussian
+        self._gaussian_params = [popt[idx*3:(idx+1)*3] for idx in range(ngaussian)]
+        self._gaussian = [_gaussian(xdata, *params) for params in self._gaussian_params]
+        self._gaussian_superpos = _gaussian_fitting_func(xdata, *popt)
+
+        return self._gaussian_superpos
 
 
     @property
     def gaussian(self):
         return self._gaussian
+
+    @property
+    def gaussian_params(self):
+        return self._gaussian_params
+
+    @property
+    def gaussian_superpos(self):
+        return self._gaussian_superpos
 
 
 # if __name__ == "__main__":

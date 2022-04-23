@@ -1,26 +1,26 @@
 {
   "files": {
-    "main.css": "/salsa-ts/static/css/main.60bbeda3.chunk.css",
-    "main.js": "/salsa-ts/static/js/main.555438df.chunk.js",
-    "main.js.map": "/salsa-ts/static/js/main.555438df.chunk.js.map",
-    "runtime-main.js": "/salsa-ts/static/js/runtime-main.ba111f19.js",
-    "runtime-main.js.map": "/salsa-ts/static/js/runtime-main.ba111f19.js.map",
-    "static/css/2.d0d4df1b.chunk.css": "/salsa-ts/static/css/2.d0d4df1b.chunk.css",
-    "static/js/2.c233e187.chunk.js": "/salsa-ts/static/js/2.c233e187.chunk.js",
-    "static/js/2.c233e187.chunk.js.map": "/salsa-ts/static/js/2.c233e187.chunk.js.map",
-    "static/js/3.bf35cd23.chunk.js": "/salsa-ts/static/js/3.bf35cd23.chunk.js",
-    "static/js/3.bf35cd23.chunk.js.map": "/salsa-ts/static/js/3.bf35cd23.chunk.js.map",
+    "main.css": "/salsa-ts/static/css/main.999b3275.chunk.css",
+    "main.js": "/salsa-ts/static/js/main.614d8e72.chunk.js",
+    "main.js.map": "/salsa-ts/static/js/main.614d8e72.chunk.js.map",
+    "runtime-main.js": "/salsa-ts/static/js/runtime-main.3b46d556.js",
+    "runtime-main.js.map": "/salsa-ts/static/js/runtime-main.3b46d556.js.map",
+    "static/css/2.764adaa9.chunk.css": "/salsa-ts/static/css/2.764adaa9.chunk.css",
+    "static/js/2.84bb9682.chunk.js": "/salsa-ts/static/js/2.84bb9682.chunk.js",
+    "static/js/2.84bb9682.chunk.js.map": "/salsa-ts/static/js/2.84bb9682.chunk.js.map",
+    "static/js/3.6ec88c8a.chunk.js": "/salsa-ts/static/js/3.6ec88c8a.chunk.js",
+    "static/js/3.6ec88c8a.chunk.js.map": "/salsa-ts/static/js/3.6ec88c8a.chunk.js.map",
     "index.html": "/salsa-ts/index.html",
-    "static/css/2.d0d4df1b.chunk.css.map": "/salsa-ts/static/css/2.d0d4df1b.chunk.css.map",
-    "static/css/main.60bbeda3.chunk.css.map": "/salsa-ts/static/css/main.60bbeda3.chunk.css.map",
-    "static/js/2.c233e187.chunk.js.LICENSE.txt": "/salsa-ts/static/js/2.c233e187.chunk.js.LICENSE.txt",
-    "static/media/salsasource.47396e84.py": "/salsa-ts/static/media/salsasource.47396e84.py"
+    "static/css/2.764adaa9.chunk.css.map": "/salsa-ts/static/css/2.764adaa9.chunk.css.map",
+    "static/css/main.999b3275.chunk.css.map": "/salsa-ts/static/css/main.999b3275.chunk.css.map",
+    "static/js/2.84bb9682.chunk.js.LICENSE.txt": "/salsa-ts/static/js/2.84bb9682.chunk.js.LICENSE.txt",
+    "static/media/salsasource.09b19ac8.py": "/salsa-ts/static/media/salsasource.09b19ac8.py"
   },
   "entrypoints": [
-    "static/js/runtime-main.ba111f19.js",
-    "static/css/2.d0d4df1b.chunk.css",
-    "static/js/2.c233e187.chunk.js",
-    "static/css/main.60bbeda3.chunk.css",
-    "static/js/main.555438df.chunk.js"
+    "static/js/runtime-main.3b46d556.js",
+    "static/css/2.764adaa9.chunk.css",
+    "static/js/2.84bb9682.chunk.js",
+    "static/css/main.999b3275.chunk.css",
+    "static/js/main.614d8e72.chunk.js"
   ]
 }
