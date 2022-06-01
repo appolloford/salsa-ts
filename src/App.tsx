@@ -105,6 +105,16 @@ function App() {
             </label>
           </Button>
         </NavbarGroup>
+        <NavbarGroup align={Alignment.RIGHT}>
+          <Button
+            icon="link"
+            text="Document"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open('https://github.com/appolloford/salsa-ts/wiki', '_blank', 'noopener,noreferrer');
+            }}
+          />
+        </NavbarGroup>
       </Navbar>
       <Viewer
         fileName={newFileName}
