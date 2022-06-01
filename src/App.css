@@ -39,4 +39,5 @@
 }
 
 @import "~@blueprintjs/core";
+@import "~@blueprintjs/popover2";
 @import "~@blueprintjs/table/lib/css/table.css";

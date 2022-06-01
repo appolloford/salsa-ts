@@ -2,11 +2,12 @@ import { useRef, useState, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag, setPosition } from '../redux/cursorSlice';
-import { setDataPoints, setFitValues } from '../redux/baselineSlice';
+import { setDataPoints, setFitValues, setSubtraction } from '../redux/baselineSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
-import { Button, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Popover } from '@blueprintjs/core';
+import { Button, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
@@ -19,6 +20,7 @@ const Viewer = memo((props: any) => {
   const isSelecting = drag === "baseline" || drag === "gaussian";
 
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+  const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
   const isBaselineFitted = baselineFit.length > 0;
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
@@ -36,7 +38,6 @@ const Viewer = memo((props: any) => {
   const setUnit = props.setUnit;
 
   const [rectangles, setRectangles] = useState<any[]>([]);
-  const [showSubtraction, setShowSubtraction] = useState(false);
 
   const selectPoints = (e: any) => {
 
@@ -219,7 +220,7 @@ const Viewer = memo((props: any) => {
     }
 
     // create subtracted data if the option is selected
-    if (showSubtraction === true) {
+    if (subtraction === true) {
       const subtractedData = sourceData.map(
         (item: number[], idx: number) => {
           return [item[0], item[1] - baselineData[idx][1]]
@@ -399,8 +400,6 @@ const Viewer = memo((props: any) => {
         unit={unit}
         setUnit={setUnit}
         dataSource={dataSource}
-        showSubtraction={showSubtraction}
-        setShowSubtraction={setShowSubtraction}
         getGaussianFit={getGaussianFit}
       />
     </div>
@@ -412,13 +411,12 @@ const Toolbar = (props: any) => {
   const drag = useSelector((state: RootState) => state.cursor.drag);
   const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints);
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+  const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
   const isBaselineFitted = baselineFit.length > 0;
   const xdata = baselinePoints.map((item: number[]) => { return item[0] });
   const ydata = baselinePoints.map((item: number[]) => { return item[1] });
 
   const dataSource = props.dataSource;
-  const showSubtraction = props.showSubtraction;
-  const setShowSubtraction = props.setShowSubtraction;
   const getGaussianFit = props.getGaussianFit;
   const unit = props.unit;
   const setUnit = props.setUnit;
@@ -444,14 +442,14 @@ const Toolbar = (props: any) => {
           icon="widget-button"
           small={true}
           active={drag === "baseline"}
-          disabled={showSubtraction}
+          disabled={subtraction}
           onClick={() => { dispatch(setDrag("baseline")) }}
         />
         <Button
           icon="widget"
           small={true}
           active={drag === "gaussian"}
-          disabled={!isBaselineFitted || !showSubtraction}
+          disabled={!isBaselineFitted || !subtraction}
           onClick={() => { dispatch(setDrag("gaussian")) }}
         />
       </ButtonGroup>
@@ -459,10 +457,10 @@ const Toolbar = (props: any) => {
       <Button
         icon="bring-data"
         small={true}
-        active={showSubtraction}
+        active={subtraction}
         onClick={() => {
-          setShowSubtraction(!showSubtraction)
-          dispatch(setDrag("zoom"))
+          dispatch(setSubtraction(!subtraction));
+          dispatch(setDrag("zoom"));
         }}
       />
       <Button
@@ -480,32 +478,49 @@ const Toolbar = (props: any) => {
         }}
       />
       <Divider />
-      <Button
-        icon="step-chart"
-        small={true}
-        active={isFitting}
-        onClick={() => {
-          if (isFitting) {
-            getGaussianFit(0);
-          }
-          else {
-            getGaussianFit(order);
-          }
-          setIsFitting(!isFitting);
-        }}
-      />
-      <Popover>
-        <Button text={order} small={true} />
-        <NumericInput
-          style={{ width: 30 }}
-          value={order}
-          min={1}
-          onValueChange={(value) => {
-            setOrder(value);
-            if (isFitting) getGaussianFit(value);
+      <Tooltip2
+        className={Classes.TOOLTIP_INDICATOR}
+        content="Fit Gaussian"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <Button
+          icon="step-chart"
+          small={true}
+          active={isFitting}
+          onClick={() => {
+            if (isFitting) {
+              getGaussianFit(0);
+            }
+            else {
+              getGaussianFit(order);
+            }
+            setIsFitting(!isFitting);
           }}
         />
-      </Popover>
+      </Tooltip2>
+      <Popover2
+        content={
+          <NumericInput
+            style={{ width: 30 }}
+            value={order}
+            min={0}
+            onValueChange={(value) => {
+              setOrder(value);
+              if (isFitting) getGaussianFit(value);
+            }}
+          />
+        }
+      >
+        <Tooltip2
+          content="Number of Gaussian peaks"
+          position={Position.TOP_LEFT}
+          minimal={true}
+        >
+          <Button text={order} small={true} />
+        </Tooltip2>
+      </Popover2>
+
       <FormGroup style={{ marginLeft: "auto", height: 10 }} label="x-axis unit:" inline={true}>
         <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
           <option value="freq">Frequency (Hz)</option>
