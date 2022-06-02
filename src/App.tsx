@@ -41,7 +41,19 @@ function App() {
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
 
-  const [gaussianGuess, setGaussianGuess] = useState<number[][]>([]);
+  const useStateRef = (initialValue: any) => {
+    const [value, setValue] = useState(initialValue);
+
+    const ref = useRef(value);
+
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+
+    return [value, setValue, ref];
+  }
+
+  const [gaussianGuess, setGaussianGuess, gaussianGuessRef] = useStateRef([]);
   const [gaussianData, setGaussianData] = useState<number[]>([]);
 
   useEffect(() => {
@@ -98,7 +110,7 @@ function App() {
         <NavbarGroup align={Alignment.LEFT}>
           <NavbarHeading>SalsaTS</NavbarHeading>
           <NavbarDivider />
-          <Button disabled={!pyodideLoaded}>
+          <Button disabled={!pyodideLoaded} minimal={true}>
             <label htmlFor="input">
               <input type="file" id="input" hidden onChange={(e: any) => { readFile(e.target.files[0]) }} />
               <Icon icon="document" /> Upload
@@ -109,6 +121,7 @@ function App() {
           <Button
             icon="link"
             text="Document"
+            minimal={true}
             onClick={(e) => {
               e.preventDefault();
               window.open('https://github.com/appolloford/salsa-ts/wiki', '_blank', 'noopener,noreferrer');
@@ -123,6 +136,7 @@ function App() {
         setUnit={setUnit}
         gaussianGuess={gaussianGuess}
         setGaussianGuess={setGaussianGuess}
+        gaussianGuessRef={gaussianGuessRef}
         gaussianData={gaussianData}
         getGaussianFit={getGaussianFit}
       />

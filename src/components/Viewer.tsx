@@ -6,7 +6,7 @@ import { setDataPoints, setFitValues, setSubtraction } from '../redux/baselineSl
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
-import { Button, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
+import { AnchorButton, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
 HC_exporting(Highcharts);
@@ -28,6 +28,7 @@ const Viewer = memo((props: any) => {
 
   const gaussianGuess = props.gaussianGuess;
   const setGaussianGuess = props.setGaussianGuess;
+  const gaussianGuessRef = props.gaussianGuessRef;
 
   const gaussianData = props.gaussianData;
   const getGaussianFit = props.getGaussianFit;
@@ -37,7 +38,6 @@ const Viewer = memo((props: any) => {
   const unit = props.unit;
   const setUnit = props.setUnit;
 
-  const [rectangles, setRectangles] = useState<any[]>([]);
 
   const selectPoints = (e: any) => {
 
@@ -100,6 +100,9 @@ const Viewer = memo((props: any) => {
 
     console.log("rect params", xminpix, ymaxpix, width, height)
 
+    const guess = [xmin, xmax, ymin, ymax]
+    setGaussianGuess([...gaussianGuess, guess]);
+
     const rectangle = chart?.renderer.rect(xminpix, ymaxpix, width, height, 2)
       .attr({
         "stroke-width": 2,
@@ -108,10 +111,18 @@ const Viewer = memo((props: any) => {
         "fill-opacity": 0.1,
         "zIndex": 3
       })
+      .on("click", () => {
+        // need useRef here, otherwise the eventlistener use the old state
+        // https://stackoverflow.com/questions/53845595/wrong-react-hooks-behaviour-with-event-listener
+        setGaussianGuess(
+          gaussianGuessRef.current.filter(
+            (value: any) => value !== guess
+          )
+        );
+        rectangle?.destroy();
+      })
       .add();
 
-    setGaussianGuess([...gaussianGuess, [xmin, xmax, ymin, ymax]]);
-    setRectangles([...rectangles, rectangle]);
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -401,6 +412,7 @@ const Viewer = memo((props: any) => {
         setUnit={setUnit}
         dataSource={dataSource}
         getGaussianFit={getGaussianFit}
+        setGaussianGuess={setGaussianGuess}
       />
     </div>
   );
@@ -423,6 +435,8 @@ const Toolbar = (props: any) => {
   const [order, setOrder] = useState(0);
   const [isFitting, setIsFitting] = useState(false);
 
+  const setGaussianGuess = props.setGaussianGuess;
+
   const fitBaseline = (x: number[], y: number[]) => {
     const result = dataSource?.fit_baseline(x, y, unit).toJs();
     const baselineFit = [].slice.call(result);
@@ -432,51 +446,87 @@ const Toolbar = (props: any) => {
   return (
     <div style={{ display: "flex" }}>
       <ButtonGroup>
-        <Button
-          icon="zoom-in"
-          small={true}
-          active={drag === "zoom"}
-          onClick={() => { dispatch(setDrag("zoom")) }}
-        />
-        <Button
-          icon="widget-button"
-          small={true}
-          active={drag === "baseline"}
-          disabled={subtraction}
-          onClick={() => { dispatch(setDrag("baseline")) }}
-        />
-        <Button
-          icon="widget"
-          small={true}
-          active={drag === "gaussian"}
-          disabled={!isBaselineFitted || !subtraction}
-          onClick={() => { dispatch(setDrag("gaussian")) }}
-        />
+        <Tooltip2
+          content="Cursor action: drag to zoom"
+          position={Position.TOP_LEFT}
+          minimal={true}
+        >
+          <AnchorButton
+            icon="zoom-in"
+            small={true}
+            active={drag === "zoom"}
+            onClick={() => { dispatch(setDrag("zoom")) }}
+          />
+        </Tooltip2>
+        <Tooltip2
+          content="Cursor action: select baseline points"
+          position={Position.TOP_LEFT}
+          minimal={true}
+        >
+          <AnchorButton
+            icon="widget-button"
+            small={true}
+            active={drag === "baseline"}
+            disabled={subtraction}
+            onClick={() => { dispatch(setDrag("baseline")) }}
+          />
+        </Tooltip2>
+        <Tooltip2
+          content="Cursor action: select gaussian peak ranges"
+          position={Position.TOP_LEFT}
+          minimal={true}
+        >
+          <AnchorButton
+            icon="widget"
+            small={true}
+            active={drag === "gaussian"}
+            disabled={!isBaselineFitted || !subtraction}
+            onClick={() => { dispatch(setDrag("gaussian")) }}
+          />
+        </Tooltip2>
       </ButtonGroup>
       <Divider />
-      <Button
-        icon="bring-data"
-        small={true}
-        active={subtraction}
-        onClick={() => {
-          dispatch(setSubtraction(!subtraction));
-          dispatch(setDrag("zoom"));
-        }}
-      />
-      <Button
-        icon="regression-chart"
-        small={true}
-        disabled={!baselinePoints.length}
-        onClick={() => { fitBaseline(xdata, ydata) }}
-      />
-      <Button
-        icon="delete"
-        small={true}
-        onClick={() => {
-          dispatch(setDataPoints([]));
-          fitBaseline([], []);
-        }}
-      />
+      <Tooltip2
+        content="Subtraction baseline"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="bring-data"
+          small={true}
+          active={subtraction}
+          onClick={() => {
+            dispatch(setSubtraction(!subtraction));
+            dispatch(setDrag("zoom"));
+          }}
+        />
+      </Tooltip2>
+      <Tooltip2
+        content="Fit baseline"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="regression-chart"
+          small={true}
+          disabled={!baselinePoints.length}
+          onClick={() => { fitBaseline(xdata, ydata) }}
+        />
+      </Tooltip2>
+      <Tooltip2
+        content="Remove all baseline data"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="delete"
+          small={true}
+          onClick={() => {
+            dispatch(setDataPoints([]));
+            fitBaseline([], []);
+          }}
+        />
+      </Tooltip2>
       <Divider />
       <Tooltip2
         className={Classes.TOOLTIP_INDICATOR}
@@ -484,8 +534,8 @@ const Toolbar = (props: any) => {
         position={Position.TOP_LEFT}
         minimal={true}
       >
-        <Button
-          icon="step-chart"
+        <AnchorButton
+          icon="timeline-bar-chart"
           small={true}
           active={isFitting}
           onClick={() => {
@@ -517,9 +567,25 @@ const Toolbar = (props: any) => {
           position={Position.TOP_LEFT}
           minimal={true}
         >
-          <Button text={order} small={true} />
+          <AnchorButton text={order} small={true} />
         </Tooltip2>
       </Popover2>
+      <Tooltip2
+        content="Remove all gaussian data"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="delete"
+          small={true}
+          onClick={() => {
+            setGaussianGuess([]);
+            getGaussianFit(0);
+            // dispatch(setDataPoints([]));
+            // fitBaseline([], []);
+          }}
+        />
+      </Tooltip2>
 
       <FormGroup style={{ marginLeft: "auto", height: 10 }} label="x-axis unit:" inline={true}>
         <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
