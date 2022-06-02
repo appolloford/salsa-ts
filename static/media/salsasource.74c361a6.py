@@ -98,9 +98,7 @@ class SALSASource:
 
         else:
             poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
-            print("xdata inp python", xdata)
             x = self.axisdata(1, unit=unit)
-            print("x inp python", x)
             self._baseline = np.polyval(poly, x)
             # self._baseline = {xi: yi for xi, yi in zip(x, y)}
             # self._baseline = np.array([[xi, yi] for xi, yi in zip(x, y)])
