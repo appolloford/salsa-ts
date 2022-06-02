@@ -21,7 +21,7 @@ const pyodideInstance = async () => {
   const pyodide = await window.loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
   });
-  await pyodide.loadPackage(["astropy", "scipy"])
+  await pyodide.loadPackage(["astropy", "scipy"]);
   // await pyodide.loadPackage("astropy")
   return pyodide
 }
@@ -60,7 +60,7 @@ function App() {
     async function init() {
       if (!pyodideLoaded) {
         pyodideObj.current = await pyodideInstance();
-        setPyodideLoaded(true)
+        setPyodideLoaded(true);
       } else {
         console.log("no duplicate reload to avoid pyodide error")
       }

@@ -38,7 +38,6 @@ const Viewer = memo((props: any) => {
   const unit = props.unit;
   const setUnit = props.setUnit;
 
-
   const selectPoints = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -78,18 +77,21 @@ const Viewer = memo((props: any) => {
     return false; // Don't zoom
   }
 
-  const selectRange = (e: any) => {
+  const unSelectAllPoints = () => {
+    chart?.series.forEach(
+      (series: any) => {
+        series?.points.forEach(
+          (point: any) => {
+            point.selected = false
+          }
+        )
+      }
+    )
+  }
 
-    // const chart = chartComponentRef.current?.chart;
 
-    // console.log(e)
-    // console.log(chart)
-    // console.log("chart option", chart?.options)
-
-    const xmin = e.xAxis[0].min;
-    const xmax = e.xAxis[0].max;
-    const ymin = e.yAxis[0].min;
-    const ymax = e.yAxis[0].max;
+  const plotRectangle = (range: number[]) => {
+    const [xmin, xmax, ymin, ymax] = range;
 
     const xminpix = chart?.xAxis[0].toPixels(xmin, false) || 0;
     const xmaxpix = chart?.xAxis[0].toPixels(xmax, false) || 0;
@@ -99,10 +101,6 @@ const Viewer = memo((props: any) => {
     const height = yminpix - ymaxpix;
 
     console.log("rect params", xminpix, ymaxpix, width, height)
-
-    const guess = [xmin, xmax, ymin, ymax]
-    setGaussianGuess([...gaussianGuess, guess]);
-
     const rectangle = chart?.renderer.rect(xminpix, ymaxpix, width, height, 2)
       .attr({
         "stroke-width": 2,
@@ -116,14 +114,32 @@ const Viewer = memo((props: any) => {
         // https://stackoverflow.com/questions/53845595/wrong-react-hooks-behaviour-with-event-listener
         setGaussianGuess(
           gaussianGuessRef.current.filter(
-            (value: any) => value !== guess
+            (value: any) => value !== range
           )
         );
         rectangle?.destroy();
       })
       .add();
 
+  }
 
+  const selectRange = (e: any) => {
+
+    // const chart = chartComponentRef.current?.chart;
+
+    // console.log(e)
+    // console.log(chart)
+    // console.log("chart option", chart?.options)
+
+    const xmin = e.xAxis[0].min;
+    const xmax = e.xAxis[0].max;
+    const ymin = e.yAxis[0].min;
+    const ymax = e.yAxis[0].max;
+
+    const guess = [xmin, xmax, ymin, ymax];
+    setGaussianGuess([...gaussianGuess, guess]);
+
+    plotRectangle(guess);
     // Fire a custom event
     // console.log("highchart", Highcharts);
     // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
@@ -413,6 +429,7 @@ const Viewer = memo((props: any) => {
         dataSource={dataSource}
         getGaussianFit={getGaussianFit}
         setGaussianGuess={setGaussianGuess}
+        unSelectAllPoints={unSelectAllPoints}
       />
     </div>
   );
@@ -436,6 +453,7 @@ const Toolbar = (props: any) => {
   const [isFitting, setIsFitting] = useState(false);
 
   const setGaussianGuess = props.setGaussianGuess;
+  const unSelectAllPoints = props.unSelectAllPoints;
 
   const fitBaseline = (x: number[], y: number[]) => {
     const result = dataSource?.fit_baseline(x, y, unit).toJs();
@@ -522,6 +540,7 @@ const Toolbar = (props: any) => {
           icon="delete"
           small={true}
           onClick={() => {
+            unSelectAllPoints();
             dispatch(setDataPoints([]));
             fitBaseline([], []);
           }}
