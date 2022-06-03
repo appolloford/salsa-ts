@@ -8,6 +8,7 @@ import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
 import { AnchorButton, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
+import { toSciSymbol } from "../Helper";
 
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
@@ -332,7 +333,7 @@ const Viewer = memo((props: any) => {
     //   }
     // ];
 
-    const subtitle = `${header.get("CTYPE2")}: ${header.get("CRVAL2").toFixed(6)}, ${header.get("CTYPE3")}: ${header.get("CRVAL3").toFixed(6)}`;
+    const subtitle = `${header.get("CTYPE2")}: ${toSciSymbol(header.get("CRVAL2"))}, ${header.get("CTYPE3")}: ${toSciSymbol(header.get("CRVAL3"))}`;
 
     options.title = {
       text: fileName

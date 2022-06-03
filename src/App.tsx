@@ -5,6 +5,7 @@ import Viewer from './components/Viewer';
 import salsaSourceDef from './python/salsasource.py';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from './redux/store'
+import { toSciSymbol } from './Helper';
 
 import './App.css';
 
@@ -119,8 +120,8 @@ function App() {
         </NavbarGroup>
         <NavbarGroup align={Alignment.RIGHT}>
           <Button
-            icon="link"
-            text="Document"
+            icon="help"
+            text="Help"
             minimal={true}
             onClick={(e) => {
               e.preventDefault();
@@ -178,7 +179,7 @@ const CursorInforPanel = (props: any) => {
   const position = useSelector((state: RootState) => state.cursor.position);
   return (
     <div style={{ textAlign: 'left' }}>
-      <Label>Position: ({position[0].toFixed(6)}, {position[1].toFixed(6)})</Label>
+      <Label>Position: ({toSciSymbol(position[0])}, {toSciSymbol(position[1])})</Label>
     </div>
   )
 }
@@ -187,10 +188,10 @@ const CursorInforPanel = (props: any) => {
 const BaselinePointTable = (props: any) => {
   const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints)
   const pointX = (rowIndex: number) => (
-    <Cell>{`${baselinePoints[rowIndex] ? (baselinePoints[rowIndex][0]).toFixed(6) : 0.0}`}</Cell>
+    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][0])) : 0.0}`}</Cell>
   );
   const pointY = (rowIndex: number) => (
-    <Cell>{`${baselinePoints[rowIndex] ? (baselinePoints[rowIndex][1]).toFixed(6) : 0.0}`}</Cell>
+    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][1])) : 0.0}`}</Cell>
   );
   return (
     <Card style={{ display: "block", overflow: "auto", width: 600, height: 150 }}>
@@ -207,14 +208,14 @@ const GaussianGuessTable = (props: any) => {
 
   const rangeX = (rowIndex: number) => (
     <Cell>
-      ({`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][0]).toFixed(6) : 0.0}`},
-      {`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][1]).toFixed(6) : 0.0}`})
+      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][0])) : 0.0}`},
+      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][1])) : 0.0}`})
     </Cell>
   );
   const rangeY = (rowIndex: number) => (
     <Cell>
-      ({`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][2]).toFixed(6) : 0.0}`},
-      {`${gaussianGuess[rowIndex] ? (gaussianGuess[rowIndex][3]).toFixed(6) : 0.0}`})
+      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][2])) : 0.0}`},
+      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][3])) : 0.0}`})
     </Cell>
   );
   return (
