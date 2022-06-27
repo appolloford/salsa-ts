@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import cursorReducer from './cursorSlice'
 import baselineReducer from './baselineSlice'
+import gaussianReducer from './gaussianSlice'
 
 export const store = configureStore({
   reducer: {
     cursor: cursorReducer,
-    baseline: baselineReducer
+    baseline: baselineReducer,
+    gaussian: gaussianReducer,
   },
 })
 

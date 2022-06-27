@@ -1,8 +1,9 @@
-import { useRef, useState, memo } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag, setPosition } from '../redux/cursorSlice';
 import { setDataPoints, setFitValues, setSubtraction } from '../redux/baselineSlice';
+import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_exporting from 'highcharts/modules/exporting';
@@ -24,20 +25,29 @@ const Viewer = memo((props: any) => {
   const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
   const isBaselineFitted = baselineFit.length > 0;
 
+  const order = useSelector((state: RootState) => state.gaussian.order);
+  const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
+  const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
+  const gaussianFit = useSelector((state: RootState) => state.gaussian.fit);
+
+  const gaussianGuessRef = useRef(gaussianGuess);
+  useEffect(() => {
+    gaussianGuessRef.current = gaussianGuess;
+  }, [gaussianGuess]);
+
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
-
-  const gaussianGuess = props.gaussianGuess;
-  const setGaussianGuess = props.setGaussianGuess;
-  const gaussianGuessRef = props.gaussianGuessRef;
-
-  const gaussianData = props.gaussianData;
-  const getGaussianFit = props.getGaussianFit;
 
   const fileName = props.fileName;
   const dataSource = props.dataSource;
   const unit = props.unit;
   const setUnit = props.setUnit;
+
+  const fitGaussian = (order: number, guess: number[][]) => {
+    const result = dataSource?.fit_gaussian(unit, order, guess).toJs();
+    const fit = [].slice.call(result);
+    dispatch(setGaussianFit(fit));
+  }
 
   const selectPoints = (e: any) => {
 
@@ -79,15 +89,13 @@ const Viewer = memo((props: any) => {
   }
 
   const unSelectAllPoints = () => {
-    chart?.series.forEach(
-      (series: any) => {
-        series?.points.forEach(
-          (point: any) => {
-            point.selected = false
-          }
-        )
-      }
-    )
+    const points = chart?.getSelectedPoints();
+    if (points?.length && points.length > 0) {
+      points.forEach((point) => {
+        point.select(false);
+      })
+    }
+    // dispatch(setDataPoints([]));
   }
 
 
@@ -113,11 +121,15 @@ const Viewer = memo((props: any) => {
       .on("click", () => {
         // need useRef here, otherwise the eventlistener use the old state
         // https://stackoverflow.com/questions/53845595/wrong-react-hooks-behaviour-with-event-listener
-        setGaussianGuess(
-          gaussianGuessRef.current.filter(
-            (value: any) => value !== range
-          )
+        // setGaussianGuess(
+        //   gaussianGuessRef.current.filter(
+        //     (value: any) => value !== range
+        //   )
+        // );
+        const newGuess = gaussianGuessRef.current.filter(
+          (value: any) => value !== range
         );
+        dispatch(setGaussianGuess(newGuess));
         rectangle?.destroy();
       })
       .add();
@@ -138,7 +150,11 @@ const Viewer = memo((props: any) => {
     const ymax = e.yAxis[0].max;
 
     const guess = [xmin, xmax, ymin, ymax];
-    setGaussianGuess([...gaussianGuess, guess]);
+    dispatch(setGaussianGuess([...gaussianGuess, guess]));
+
+    if (isFitting) {
+      fitGaussian(order, [...gaussianGuess, guess]);
+    }
 
     plotRectangle(guess);
     // Fire a custom event
@@ -297,12 +313,12 @@ const Viewer = memo((props: any) => {
       console.log("series", options.series);
     }
 
-    if (gaussianData) {
+    if (gaussianFit) {
       const gaussian = xdataArray.map((xi: number, i: number) => {
         return [xi, 0.0];
       });
       gaussian.forEach((item: number[], i: number) => {
-        item[1] = gaussianData[i];
+        item[1] = gaussianFit[i];
       });
       options.series.push(
         {
@@ -428,8 +444,6 @@ const Viewer = memo((props: any) => {
         unit={unit}
         setUnit={setUnit}
         dataSource={dataSource}
-        getGaussianFit={getGaussianFit}
-        setGaussianGuess={setGaussianGuess}
         unSelectAllPoints={unSelectAllPoints}
       />
     </div>
@@ -446,20 +460,24 @@ const Toolbar = (props: any) => {
   const xdata = baselinePoints.map((item: number[]) => { return item[0] });
   const ydata = baselinePoints.map((item: number[]) => { return item[1] });
 
+  const order = useSelector((state: RootState) => state.gaussian.order);
+  const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
+  const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
   const dataSource = props.dataSource;
-  const getGaussianFit = props.getGaussianFit;
   const unit = props.unit;
   const setUnit = props.setUnit;
-  const [order, setOrder] = useState(0);
-  const [isFitting, setIsFitting] = useState(false);
 
-  const setGaussianGuess = props.setGaussianGuess;
   const unSelectAllPoints = props.unSelectAllPoints;
 
   const fitBaseline = (x: number[], y: number[]) => {
     const result = dataSource?.fit_baseline(x, y, unit).toJs();
-    const baselineFit = [].slice.call(result);
-    dispatch(setFitValues(baselineFit));
+    const fit = [].slice.call(result);
+    dispatch(setFitValues(fit));
+  }
+  const fitGaussian = (nGaussian: number) => {
+    const result = dataSource?.fit_gaussian(unit, nGaussian, gaussianGuess).toJs();
+    const fit = [].slice.call(result);
+    dispatch(setGaussianFit(fit));
   }
 
   return (
@@ -558,14 +576,15 @@ const Toolbar = (props: any) => {
           icon="timeline-bar-chart"
           small={true}
           active={isFitting}
+          disabled={!baselinePoints.length || !subtraction}
           onClick={() => {
             if (isFitting) {
-              getGaussianFit(0);
+              dispatch(setGaussianFit([]));
             }
             else {
-              getGaussianFit(order);
+              fitGaussian(order);
             }
-            setIsFitting(!isFitting);
+            dispatch(setIsFitting(!isFitting))
           }}
         />
       </Tooltip2>
@@ -576,8 +595,8 @@ const Toolbar = (props: any) => {
             value={order}
             min={0}
             onValueChange={(value) => {
-              setOrder(value);
-              if (isFitting) getGaussianFit(value);
+              dispatch(setOrder(value));
+              if (isFitting) fitGaussian(value);
             }}
           />
         }
@@ -599,10 +618,9 @@ const Toolbar = (props: any) => {
           icon="delete"
           small={true}
           onClick={() => {
-            setGaussianGuess([]);
-            getGaussianFit(0);
-            // dispatch(setDataPoints([]));
-            // fitBaseline([], []);
+            dispatch(setIsFitting(false));
+            dispatch(setGaussianGuess([]));
+            dispatch(setGaussianFit([]));
           }}
         />
       </Tooltip2>

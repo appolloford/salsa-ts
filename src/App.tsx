@@ -41,21 +41,7 @@ function App() {
   const [pyodideLoaded, setPyodideLoaded] = useState(false);
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
-
-  const useStateRef = (initialValue: any) => {
-    const [value, setValue] = useState(initialValue);
-
-    const ref = useRef(value);
-
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-
-    return [value, setValue, ref];
-  }
-
-  const [gaussianGuess, setGaussianGuess, gaussianGuessRef] = useStateRef([]);
-  const [gaussianData, setGaussianData] = useState<number[]>([]);
+  const [dataSource, setDataSource] = useState<any>();
 
   useEffect(() => {
     async function init() {
@@ -68,8 +54,6 @@ function App() {
     }
     init()
   });
-
-  const [dataSource, setDataSource] = useState<any>();
 
   const getData = async (file: File) => {
     const script = await (await fetch(salsaSourceDef)).text();
@@ -98,11 +82,6 @@ function App() {
       }
       reader.readAsArrayBuffer(file)
     }
-  }
-
-  const getGaussianFit = (nGaussian: number) => {
-    const result = dataSource?.fit_gaussian(unit, nGaussian, gaussianGuess).toJs();
-    setGaussianData(result);
   }
 
   return (
@@ -135,11 +114,6 @@ function App() {
         dataSource={dataSource}
         unit={unit}
         setUnit={setUnit}
-        gaussianGuess={gaussianGuess}
-        setGaussianGuess={setGaussianGuess}
-        gaussianGuessRef={gaussianGuessRef}
-        gaussianData={gaussianData}
-        getGaussianFit={getGaussianFit}
       />
       <div style={{ display: "flex" }}>
         <div style={{ flex: 1 }}>
@@ -162,9 +136,7 @@ function App() {
               id="gaussianranges"
               title="Selected Gaussian Ranges"
               panel={
-                <GaussianGuessTable
-                  gaussianGuess={gaussianGuess}
-                />
+                <GaussianGuessTable />
               }
             />
           </Tabs>
@@ -204,7 +176,7 @@ const BaselinePointTable = (props: any) => {
 }
 
 const GaussianGuessTable = (props: any) => {
-  const gaussianGuess = props.gaussianGuess;
+  const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
 
   const rangeX = (rowIndex: number) => (
     <Cell>
