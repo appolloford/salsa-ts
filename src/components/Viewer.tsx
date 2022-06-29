@@ -6,13 +6,16 @@ import { setDataPoints, setFitValues, setSubtraction } from '../redux/baselineSl
 import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import HC_more from 'highcharts/highcharts-more';
 import HC_exporting from 'highcharts/modules/exporting';
 import { AnchorButton, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { toSciSymbol } from "../Helper";
 
+HC_more(Highcharts);
 HC_exporting(Highcharts);
 require("highcharts/modules/draggable-points")(Highcharts);
+require("highcharts/modules/accessibility")(Highcharts);
 
 
 const Viewer = memo((props: any) => {
@@ -29,11 +32,6 @@ const Viewer = memo((props: any) => {
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
   const gaussianFit = useSelector((state: RootState) => state.gaussian.fit);
-
-  const gaussianGuessRef = useRef(gaussianGuess);
-  useEffect(() => {
-    gaussianGuessRef.current = gaussianGuess;
-  }, [gaussianGuess]);
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
@@ -98,44 +96,6 @@ const Viewer = memo((props: any) => {
     // dispatch(setDataPoints([]));
   }
 
-
-  const plotRectangle = (range: number[]) => {
-    const [xmin, xmax, ymin, ymax] = range;
-
-    const xminpix = chart?.xAxis[0].toPixels(xmin, false) || 0;
-    const xmaxpix = chart?.xAxis[0].toPixels(xmax, false) || 0;
-    const yminpix = chart?.yAxis[0].toPixels(ymin, false) || 0;
-    const ymaxpix = chart?.yAxis[0].toPixels(ymax, false) || 0;
-    const width = xmaxpix - xminpix;
-    const height = yminpix - ymaxpix;
-
-    console.log("rect params", xminpix, ymaxpix, width, height)
-    const rectangle = chart?.renderer.rect(xminpix, ymaxpix, width, height, 2)
-      .attr({
-        "stroke-width": 2,
-        "stroke": 'red',
-        "fill": 'black',
-        "fill-opacity": 0.1,
-        "zIndex": 3
-      })
-      .on("click", () => {
-        // need useRef here, otherwise the eventlistener use the old state
-        // https://stackoverflow.com/questions/53845595/wrong-react-hooks-behaviour-with-event-listener
-        // setGaussianGuess(
-        //   gaussianGuessRef.current.filter(
-        //     (value: any) => value !== range
-        //   )
-        // );
-        const newGuess = gaussianGuessRef.current.filter(
-          (value: any) => value !== range
-        );
-        dispatch(setGaussianGuess(newGuess));
-        rectangle?.destroy();
-      })
-      .add();
-
-  }
-
   const selectRange = (e: any) => {
 
     // const chart = chartComponentRef.current?.chart;
@@ -156,7 +116,6 @@ const Viewer = memo((props: any) => {
       fitGaussian(order, [...gaussianGuess, guess]);
     }
 
-    plotRectangle(guess);
     // Fire a custom event
     // console.log("highchart", Highcharts);
     // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
@@ -235,6 +194,16 @@ const Viewer = memo((props: any) => {
         tooltip: {
           followPointer: false,
         },
+        events: {
+          click: (e) => {
+            dispatch(
+              setGaussianGuess(
+                gaussianGuess.filter(
+                  (value: number[], index: number) =>
+                    index !== e.point.series.index - (3 - Number(subtraction))
+                )));
+          }
+        }
       },
     },
   };
@@ -329,6 +298,21 @@ const Viewer = memo((props: any) => {
           colorIndex: 5,
         },
       );
+    }
+
+    if (gaussianGuess) {
+      const series = gaussianGuess.map((guess: number[], index: number) => {
+        const [xmin, xmax, ymin, ymax] = guess;
+        const data: Highcharts.SeriesOptionsType = {
+          name: `Peak ${index + 1}`,
+          type: 'polygon',
+          data: [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]],
+          color: 'green',
+          opacity: 0.5
+        }
+        return data;
+      });
+      if (series) options.series = [...options.series, ...series];
     }
 
     // options.series = [
