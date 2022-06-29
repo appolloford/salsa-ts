@@ -162,6 +162,19 @@ class SALSASource:
         return self._gaussian_superpos
 
     def convert2freq(self, value: float, unit: str) -> float:
+        """
+        Convert the input value from the input unit to frequency 
+
+        Args:
+            value (float): input value
+            unit (str): original unit
+
+        Raises:
+            ValueError: if the input unit is unknown
+
+        Returns:
+            float: value in frequency
+        """
 
         reval = self.header[f"CRVAL1"]
         repix = self.header[f"CRPIX1"]
@@ -188,13 +201,25 @@ class SALSASource:
             ret = - (value * 1000 + vlsr) * reval / clight + reval
 
         else:
-            raise RuntimeError(f"Unkown unit: {unit}")
+            raise ValueError(f"Unkown unit: {unit}")
 
         return ret
 
     def convertfreq(self, value: float, unit: str) -> float:
+        """
+        Convert the frequency to another unit
 
-        naxis = self.header[f"NAXIS1"]
+        Args:
+            value (float): input frequency value
+            unit (str): target unit
+
+        Raises:
+            ValueError: if the target unit is unknown
+
+        Returns:
+            float: target value
+        """
+
         reval = self.header[f"CRVAL1"]
         repix = self.header[f"CRPIX1"]
         delta = self.header[f"CDELT1"]
@@ -220,7 +245,7 @@ class SALSASource:
             ret = (-clight * (value - reval) / reval - vlsr) / 1000
 
         else:
-            raise RuntimeError(f"Unkown unit: {unit}")
+            raise ValueError(f"Unkown unit: {unit}")
 
         return ret
 

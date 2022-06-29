@@ -41,7 +41,15 @@ const Viewer = memo((props: any) => {
   const setUnit = props.setUnit;
 
   const fitGaussian = (order: number, guess: number[][]) => {
-    const result = dataSource?.fit_gaussian(unit, order, guess).toJs();
+    const guess2 = guess.map((g: number[]) => {
+      const [xmin, xmax, ymin, ymax] = g;
+      const tmp1 = dataSource?.convertfreq(xmin, unit);
+      const tmp2 = dataSource?.convertfreq(xmax, unit);
+      const xmin2 = tmp1 <= tmp2 ? tmp1 : tmp2;
+      const xmax2 = tmp1 <= tmp2 ? tmp2 : tmp1;
+      return [xmin2, xmax2, ymin, ymax];
+    });
+    const result = dataSource?.fit_gaussian(unit, order, guess2).toJs();
     const fit = [].slice.call(result);
     dispatch(setGaussianFit(fit));
   }
@@ -458,8 +466,16 @@ const Toolbar = (props: any) => {
     const fit = [].slice.call(result);
     dispatch(setFitValues(fit));
   }
-  const fitGaussian = (nGaussian: number) => {
-    const result = dataSource?.fit_gaussian(unit, nGaussian, gaussianGuess).toJs();
+  const fitGaussian = (order: number) => {
+    const guess = gaussianGuess.map((guess: number[]) => {
+      const [xmin, xmax, ymin, ymax] = guess;
+      const tmp1 = dataSource?.convertfreq(xmin, unit);
+      const tmp2 = dataSource?.convertfreq(xmax, unit);
+      const xmin2 = tmp1 <= tmp2 ? tmp1 : tmp2;
+      const xmax2 = tmp1 <= tmp2 ? tmp2 : tmp1;
+      return [xmin2, xmax2, ymin, ymax];
+    });
+    const result = dataSource?.fit_gaussian(unit, order, guess).toJs();
     const fit = [].slice.call(result);
     dispatch(setGaussianFit(fit));
   }
