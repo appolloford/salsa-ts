@@ -161,6 +161,68 @@ class SALSASource:
     def gaussian_superpos(self):
         return self._gaussian_superpos
 
+    def convert2freq(self, value: float, unit: str) -> float:
+
+        reval = self.header[f"CRVAL1"]
+        repix = self.header[f"CRPIX1"]
+        delta = self.header[f"CDELT1"]
+
+        vlsr = self.header["VELO-LSR"] * 1000
+
+        lowerunit = unit.lower()
+
+        if lowerunit.startswith("chan"):
+            ret = reval + (value - repix) * delta
+
+        elif lowerunit.startswith("freq"):
+            ret = value
+
+            if lowerunit.endswith("-k"):
+                ret *= 1e3
+            elif lowerunit.endswith("-m"):
+                ret *= 1e6
+            elif lowerunit.endswith("-g"):
+                ret *= 1e9
+
+        elif lowerunit.startswith("vel"):
+            ret = - (value * 1000 + vlsr) * reval / clight + reval
+
+        else:
+            raise RuntimeError(f"Unkown unit: {unit}")
+
+        return ret
+
+    def convertfreq(self, value: float, unit: str) -> float:
+
+        naxis = self.header[f"NAXIS1"]
+        reval = self.header[f"CRVAL1"]
+        repix = self.header[f"CRPIX1"]
+        delta = self.header[f"CDELT1"]
+
+        vlsr = self.header["VELO-LSR"] * 1000
+
+        lowerunit = unit.lower()
+
+        if lowerunit.startswith("chan"):
+            ret = (value - reval) / delta + repix
+
+        elif lowerunit.startswith("freq"):
+            ret = value
+
+            if lowerunit.endswith("-k"):
+                ret /= 1e3
+            elif lowerunit.endswith("-m"):
+                ret /= 1e6
+            elif lowerunit.endswith("-g"):
+                ret /= 1e9
+
+        elif lowerunit.startswith("vel"):
+            ret = (-clight * (value - reval) / reval - vlsr) / 1000
+
+        else:
+            raise RuntimeError(f"Unkown unit: {unit}")
+
+        return ret
 
 # if __name__ == "__main__":
 #     array = jsarray.to_py().tobytes()
