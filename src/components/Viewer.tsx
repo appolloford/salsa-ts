@@ -103,8 +103,8 @@ const Viewer = memo((props: any) => {
     // console.log(chart)
     // console.log("chart option", chart?.options)
 
-    const xmin = e.xAxis[0].min;
-    const xmax = e.xAxis[0].max;
+    const xmin = dataSource?.convert2freq(e.xAxis[0].min, unit);
+    const xmax = dataSource?.convert2freq(e.xAxis[0].max, unit);
     const ymin = e.yAxis[0].min;
     const ymax = e.yAxis[0].max;
 
@@ -294,10 +294,12 @@ const Viewer = memo((props: any) => {
     if (gaussianGuess) {
       const series = gaussianGuess.map((guess: number[], index: number) => {
         const [xmin, xmax, ymin, ymax] = guess;
+        const xmin2 = dataSource?.convertfreq(xmin, unit);
+        const xmax2 = dataSource?.convertfreq(xmax, unit);
         const data: Highcharts.SeriesOptionsType = {
           name: `Peak ${index + 1}`,
           type: 'polygon',
-          data: [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]],
+          data: [[xmin2, ymin], [xmax2, ymin], [xmax2, ymax], [xmin2, ymax]],
           color: 'green',
           opacity: 0.5
         }
