@@ -22,7 +22,6 @@ const Viewer = memo((props: any) => {
 
   const dispatch = useDispatch();
   const drag = useSelector((state: RootState) => state.cursor.drag);
-  const isSelecting = drag === "baseline" || drag === "gaussian";
 
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
   const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
@@ -121,14 +120,6 @@ const Viewer = memo((props: any) => {
     // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
 
     return false; // Don't zoom
-  }
-
-  let selectionFunction;
-  if (drag === "baseline") {
-    selectionFunction = selectPoints;
-  }
-  else if (drag === "gaussian") {
-    selectionFunction = selectRange;
   }
 
   function unselectByClick() {
@@ -255,7 +246,7 @@ const Viewer = memo((props: any) => {
           type: 'scatter',
           lineWidth: 2,
           data: sourceData,
-          allowPointSelect: isSelecting,
+          allowPointSelect: drag !== "zoom",
           findNearestPointBy: 'xy',
         },
         // {
@@ -362,12 +353,19 @@ const Viewer = memo((props: any) => {
 
   }
 
-  if (isSelecting === true && options.chart) {
+  if (drag === "baseline" && options.chart) {
     options.chart.zoomType = 'xy';
     options.chart.renderTo = chart?.container;
     options.chart.events = {
-      selection: selectionFunction,
+      selection: selectPoints,
       click: unselectByClick,
+    };
+  }
+  else if (drag === "gaussian" && options.chart) {
+    options.chart.zoomType = 'xy';
+    options.chart.renderTo = chart?.container;
+    options.chart.events = {
+      selection: selectRange,
     };
   }
   else if (options.chart) {
