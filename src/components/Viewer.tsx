@@ -2,13 +2,14 @@ import { useEffect, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag, setPosition } from '../redux/cursorSlice';
-import { setDataPoints, setFitValues, setSubtraction } from '../redux/baselineSlice';
-import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit } from '../redux/gaussianSlice';
+import { setDataPoints, setFitValues, setSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
+import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_more from 'highcharts/highcharts-more';
 import HC_exporting from 'highcharts/modules/exporting';
-import { AnchorButton, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
+import { AnchorButton, Button, Card, Classes, Collapse, ButtonGroup, Divider, FormGroup, HTMLSelect, Label, NumericInput, Position, Pre, Text } from '@blueprintjs/core';
+import { Cell, Column, Table2 } from "@blueprintjs/table";
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { toSciSymbol } from "../Helper";
 
@@ -25,12 +26,16 @@ const Viewer = memo((props: any) => {
 
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
   const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
+  const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
   const isBaselineFitted = baselineFit.length > 0;
 
   const order = useSelector((state: RootState) => state.gaussian.order);
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
   const gaussianFit = useSelector((state: RootState) => state.gaussian.fit);
+  const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
+
+  const cardHeight = 250 / (Number(showBaselineTable) + Number(showGaussianTable));
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   const chart = chartComponentRef.current?.chart;
@@ -438,12 +443,26 @@ const Viewer = memo((props: any) => {
         dataSource={dataSource}
         unSelectAllPoints={unSelectAllPoints}
       />
+      <Divider />
+      <Collapse isOpen={showBaselineTable}>
+        {/* <Pre>
+          Dummy text.
+        </Pre> */}
+        <BaselineTable height={cardHeight} />
+      </Collapse>
+      <Collapse isOpen={showGaussianTable}>
+        {/* <Pre>
+          Dummy text.
+        </Pre> */}
+        <GaussianTable height={cardHeight} />
+      </Collapse>
     </div>
   );
 });
 
 const Toolbar = (props: any) => {
   const dispatch = useDispatch();
+  const position = useSelector((state: RootState) => state.cursor.position);
   const drag = useSelector((state: RootState) => state.cursor.drag);
   const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints);
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
@@ -479,6 +498,9 @@ const Toolbar = (props: any) => {
     const fit = [].slice.call(result);
     dispatch(setGaussianFit(fit));
   }
+
+  const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
+  const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
 
   return (
     <div style={{ display: "flex" }}>
@@ -551,6 +573,17 @@ const Toolbar = (props: any) => {
         />
       </Tooltip2>
       <Tooltip2
+        content="Show baseline table"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="th"
+          small={true}
+          onClick={() => { dispatch(setShowBaselineTable(!showBaselineTable)) }}
+        />
+      </Tooltip2>
+      <Tooltip2
         content="Remove all baseline data"
         position={Position.TOP_LEFT}
         minimal={true}
@@ -610,6 +643,17 @@ const Toolbar = (props: any) => {
         </Tooltip2>
       </Popover2>
       <Tooltip2
+        content="Show gaussian table"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="th"
+          small={true}
+          onClick={() => { dispatch(setShowGaussianTable(!showGaussianTable)) }}
+        />
+      </Tooltip2>
+      <Tooltip2
         content="Remove all gaussian data"
         position={Position.TOP_LEFT}
         minimal={true}
@@ -625,6 +669,13 @@ const Toolbar = (props: any) => {
         />
       </Tooltip2>
 
+      {/* <Label>Position: ({toSciSymbol(position[0])}, {toSciSymbol(position[1])})</Label> */}
+      <Button style={{ marginLeft: "auto", height: 10 }} small={true} minimal={true} disabled={true} >
+        (x, y) = ({toSciSymbol(position[0])}, {toSciSymbol(position[1])})
+      </Button>
+      {/* <Text style={{ marginLeft: "auto", height: 10 }} >(x, y) = ({toSciSymbol(position[0])}, {toSciSymbol(position[1])})</Text> */}
+      {/* (x, y) = ({toSciSymbol(position[0])}, {toSciSymbol(position[1])}) */}
+
       <FormGroup style={{ marginLeft: "auto", height: 10 }} label="x-axis unit:" inline={true}>
         <HTMLSelect value={unit} minimal={true} onChange={(e) => { setUnit(e.target.value) }}>
           <option value="freq">Frequency (Hz)</option>
@@ -636,6 +687,53 @@ const Toolbar = (props: any) => {
         </HTMLSelect>
       </FormGroup>
     </div>
+  )
+}
+
+
+const BaselineTable = (props: any) => {
+  const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints)
+  const pointX = (rowIndex: number) => (
+    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][0])) : 0.0}`}</Cell>
+  );
+  const pointY = (rowIndex: number) => (
+    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][1])) : 0.0}`}</Cell>
+  );
+  return (
+    <Card style={{ display: "block", overflow: "auto", height: props.height }}>
+      Selected Points:
+      <Table2 numRows={baselinePoints.length} enableGhostCells={true} columnWidths={[400, 400]}>
+        <Column name="X coordinate" cellRenderer={pointX} />
+        <Column name="Y coordinate" cellRenderer={pointY} />
+      </Table2>
+    </Card>
+  )
+}
+
+const GaussianTable = (props: any) => {
+  const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
+
+  const rangeX = (rowIndex: number) => (
+    <Cell>
+      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][0])) : 0.0}`},
+      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][1])) : 0.0}`})
+    </Cell>
+  );
+  const rangeY = (rowIndex: number) => (
+    <Cell>
+      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][2])) : 0.0}`},
+      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][3])) : 0.0}`})
+    </Cell>
+  );
+  return (
+    <Card style={{ display: "block", overflow: "auto", height: props.height }}>
+      Constraints:
+      <Table2 numRows={gaussianGuess.length} enableGhostCells={true} columnWidths={[400, 400]}>
+        {/* <Table2 numRows={gaussianGuess.length} enableGhostCells={true}> */}
+        <Column name="X range" cellRenderer={rangeX} />
+        <Column name="Y range" cellRenderer={rangeY} />
+      </Table2>
+    </Card>
   )
 }
 

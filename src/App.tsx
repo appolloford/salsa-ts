@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Alignment, Button, Card, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Tabs, Tab } from '@blueprintjs/core';
+import { Alignment, Button, Card, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Tabs, Tab, Drawer } from '@blueprintjs/core';
 import { Cell, Column, Table2 } from "@blueprintjs/table";
 import Viewer from './components/Viewer';
 import salsaSourceDef from './python/salsasource.py';
@@ -84,6 +84,7 @@ function App() {
     }
   }
 
+  const [drawerstate, setDrawerState] = useState(true);
   return (
     <div className="App">
       <Navbar>
@@ -107,6 +108,7 @@ function App() {
               window.open('https://github.com/appolloford/salsa-ts/wiki', '_blank', 'noopener,noreferrer');
             }}
           />
+          <Button icon="app-header" text="Header" minimal={true} onClick={() => setDrawerState(true)} />
         </NavbarGroup>
       </Navbar>
       <Viewer
@@ -115,89 +117,14 @@ function App() {
         unit={unit}
         setUnit={setUnit}
       />
-      <div style={{ display: "flex" }}>
-        <div style={{ flex: 1 }}>
-          <Tabs>
-            <Tab
-              id="cursorpanel"
-              title="Cursor Information"
-              panel={
-                <CursorInforPanel />
-              }
-            />
-            <Tab
-              id="baselinepoints"
-              title="Selected Baseline Points"
-              panel={
-                <BaselinePointTable />
-              }
-            />
-            <Tab
-              id="gaussianranges"
-              title="Selected Gaussian Ranges"
-              panel={
-                <GaussianGuessTable />
-              }
-            />
-          </Tabs>
-        </div>
-      </div>
+      <Drawer
+        isOpen={drawerstate}
+        onClose={() => setDrawerState(false)}
+        children={<Card></Card>}
+      />
     </div >
   );
 }
 
-const CursorInforPanel = (props: any) => {
-
-  const position = useSelector((state: RootState) => state.cursor.position);
-  return (
-    <div style={{ textAlign: 'left' }}>
-      <Label>Position: ({toSciSymbol(position[0])}, {toSciSymbol(position[1])})</Label>
-    </div>
-  )
-}
-
-
-const BaselinePointTable = (props: any) => {
-  const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints)
-  const pointX = (rowIndex: number) => (
-    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][0])) : 0.0}`}</Cell>
-  );
-  const pointY = (rowIndex: number) => (
-    <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][1])) : 0.0}`}</Cell>
-  );
-  return (
-    <Card style={{ display: "block", overflow: "auto", width: 600, height: 150 }}>
-      <Table2 numRows={baselinePoints.length} enableGhostCells={true}>
-        <Column name="X coordinate" cellRenderer={pointX} />
-        <Column name="Y coordinate" cellRenderer={pointY} />
-      </Table2>
-    </Card>
-  )
-}
-
-const GaussianGuessTable = (props: any) => {
-  const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
-
-  const rangeX = (rowIndex: number) => (
-    <Cell>
-      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][0])) : 0.0}`},
-      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][1])) : 0.0}`})
-    </Cell>
-  );
-  const rangeY = (rowIndex: number) => (
-    <Cell>
-      ({`${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][2])) : 0.0}`},
-      {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][3])) : 0.0}`})
-    </Cell>
-  );
-  return (
-    <Card style={{ display: "block", overflow: "auto", width: 600, height: 150 }}>
-      <Table2 numRows={gaussianGuess.length} enableGhostCells={true} columnWidths={[300, 200]}>
-        <Column name="X range" cellRenderer={rangeX} />
-        <Column name="Y range" cellRenderer={rangeY} />
-      </Table2>
-    </Card>
-  )
-}
 
 export default App;

@@ -6,6 +6,7 @@ export interface GaussianState {
   guess: number[][]
   params: number[][]
   fit: number[]
+  showGaussianTable: boolean
 }
 
 const initialState: GaussianState = {
@@ -14,6 +15,7 @@ const initialState: GaussianState = {
   guess: [],
   params: [],
   fit: [],
+  showGaussianTable: false
 }
 
 export const GaussianSlice = createSlice({
@@ -32,10 +34,13 @@ export const GaussianSlice = createSlice({
     setGaussianFit: (state, action: PayloadAction<number[]>) => {
       state.fit = action.payload
     },
+    setShowGaussianTable: (state, action: PayloadAction<boolean>) => {
+      state.showGaussianTable = action.payload
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setOrder, setIsFitting, setGaussianGuess, setGaussianFit } = GaussianSlice.actions
+export const { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } = GaussianSlice.actions
 
 export default GaussianSlice.reducer
