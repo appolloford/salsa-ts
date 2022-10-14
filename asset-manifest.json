@@ -1,26 +1,26 @@
 {
   "files": {
     "main.css": "/salsa-ts/static/css/main.1616544e.chunk.css",
-    "main.js": "/salsa-ts/static/js/main.722ad1da.chunk.js",
-    "main.js.map": "/salsa-ts/static/js/main.722ad1da.chunk.js.map",
+    "main.js": "/salsa-ts/static/js/main.ff40f582.chunk.js",
+    "main.js.map": "/salsa-ts/static/js/main.ff40f582.chunk.js.map",
     "runtime-main.js": "/salsa-ts/static/js/runtime-main.9637b450.js",
     "runtime-main.js.map": "/salsa-ts/static/js/runtime-main.9637b450.js.map",
     "static/css/2.b7658850.chunk.css": "/salsa-ts/static/css/2.b7658850.chunk.css",
-    "static/js/2.6db37441.chunk.js": "/salsa-ts/static/js/2.6db37441.chunk.js",
-    "static/js/2.6db37441.chunk.js.map": "/salsa-ts/static/js/2.6db37441.chunk.js.map",
+    "static/js/2.fe1803a2.chunk.js": "/salsa-ts/static/js/2.fe1803a2.chunk.js",
+    "static/js/2.fe1803a2.chunk.js.map": "/salsa-ts/static/js/2.fe1803a2.chunk.js.map",
     "static/js/3.38cb36d1.chunk.js": "/salsa-ts/static/js/3.38cb36d1.chunk.js",
     "static/js/3.38cb36d1.chunk.js.map": "/salsa-ts/static/js/3.38cb36d1.chunk.js.map",
     "index.html": "/salsa-ts/index.html",
     "static/css/2.b7658850.chunk.css.map": "/salsa-ts/static/css/2.b7658850.chunk.css.map",
     "static/css/main.1616544e.chunk.css.map": "/salsa-ts/static/css/main.1616544e.chunk.css.map",
-    "static/js/2.6db37441.chunk.js.LICENSE.txt": "/salsa-ts/static/js/2.6db37441.chunk.js.LICENSE.txt",
+    "static/js/2.fe1803a2.chunk.js.LICENSE.txt": "/salsa-ts/static/js/2.fe1803a2.chunk.js.LICENSE.txt",
     "static/media/salsasource.1eae1293.py": "/salsa-ts/static/media/salsasource.1eae1293.py"
   },
   "entrypoints": [
     "static/js/runtime-main.9637b450.js",
     "static/css/2.b7658850.chunk.css",
-    "static/js/2.6db37441.chunk.js",
+    "static/js/2.fe1803a2.chunk.js",
     "static/css/main.1616544e.chunk.css",
-    "static/js/main.722ad1da.chunk.js"
+    "static/js/main.ff40f582.chunk.js"
   ]
 }
