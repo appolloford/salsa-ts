@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Alignment, Button, Card, Icon, Label, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, Tabs, Tab, Drawer } from '@blueprintjs/core';
-import { Cell, Column, Table2 } from "@blueprintjs/table";
+import { Alignment, Button, Card, Icon, Drawer, Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from '@blueprintjs/core';
 import Viewer from './components/Viewer';
 import salsaSourceDef from './python/salsasource.py';
 import { useSelector, useDispatch } from 'react-redux'
@@ -42,6 +41,7 @@ function App() {
   const [newFileName, setNewfileName] = useState("");
   const [unit, setUnit] = useState("freq");
   const [dataSource, setDataSource] = useState<any>();
+  const [drawerstate, setDrawerState] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -84,7 +84,8 @@ function App() {
     }
   }
 
-  const [drawerstate, setDrawerState] = useState(true);
+  const header = dataSource && Array.from(dataSource.header.toJs(), ([key, value]) => `${key} = ${value}`);
+
   return (
     <div className="App">
       <Navbar>
@@ -120,7 +121,11 @@ function App() {
       <Drawer
         isOpen={drawerstate}
         onClose={() => setDrawerState(false)}
-        children={<Card></Card>}
+        children={
+          <Card>
+            {header && header.map((item: string) => <div>{item}</div>)}
+          </Card>
+        }
       />
     </div >
   );
