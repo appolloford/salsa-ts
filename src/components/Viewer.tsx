@@ -1,9 +1,9 @@
 import { useEffect, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
-import { setDrag, setPosition } from '../redux/cursorSlice';
-import { setBaselinePoints, setShowBaselineTable } from '../redux/baselineSlice';
-import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
+import { setPosition } from '../redux/cursorSlice';
+import { setBaselinePoints, setBaselineFit } from '../redux/baselineSlice';
+import { setGaussianGuess, setGaussianFit } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_more from 'highcharts/highcharts-more';
@@ -24,10 +24,11 @@ const Viewer = memo((props: any) => {
   const dispatch = useDispatch();
   const drag = useSelector((state: RootState) => state.cursor.drag);
 
-  const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+  const baselineFitValues = useSelector((state: RootState) => state.baseline.baselineFitValues);
+  const baselineFitOrder = useSelector((state: RootState) => state.baseline.baselineFitOrder);
   const showSubtraction = useSelector((state: RootState) => state.baseline.showSubtraction);
   const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
-  const isBaselineFitted = baselineFit.length > 0;
+  const isBaselineFitted = baselineFitValues.length > 0;
 
   const order = useSelector((state: RootState) => state.gaussian.order);
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
@@ -45,8 +46,16 @@ const Viewer = memo((props: any) => {
   const unit = props.unit;
   const setUnit = props.setUnit;
 
+  const fitBaseline = (order: number, points: number[][]) => {
+    const xdata = points.map((item: number[]) => { return item[0] });
+    const ydata = points.map((item: number[]) => { return item[1] });
+    const result = dataSource?.fit_baseline(xdata, ydata, unit, order).toJs();
+    const fit = [].slice.call(result);
+    dispatch(setBaselineFit(fit));
+  }
+
   const fitGaussian = (order: number, guess: number[][]) => {
-    const guess2 = guess.map((g: number[]) => {
+    const guessInCurrentUnit = guess.map((g: number[]) => {
       const [xmin, xmax, ymin, ymax] = g;
       const tmp1 = dataSource?.convertfreq(xmin, unit);
       const tmp2 = dataSource?.convertfreq(xmax, unit);
@@ -54,7 +63,7 @@ const Viewer = memo((props: any) => {
       const xmax2 = tmp1 <= tmp2 ? tmp2 : tmp1;
       return [xmin2, xmax2, ymin, ymax];
     });
-    const result = dataSource?.fit_gaussian(unit, order, guess2).toJs();
+    const result = dataSource?.fit_gaussian(unit, order, guessInCurrentUnit).toJs();
     const fit = [].slice.call(result);
     dispatch(setGaussianFit(fit));
   }
@@ -63,9 +72,9 @@ const Viewer = memo((props: any) => {
 
     // const chart = chartComponentRef.current?.chart;
 
-    console.log(e)
-    console.log(chart)
-    console.log("chart option", chart?.options)
+    // console.log(e)
+    // console.log(chart)
+    // console.log("chart option", chart?.options)
 
     if (chart?.series) {
       chart.series.forEach(
@@ -90,6 +99,7 @@ const Viewer = memo((props: any) => {
     ) || [];
 
     dispatch(setBaselinePoints(data));
+    fitBaseline(baselineFitOrder, data);
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -106,15 +116,10 @@ const Viewer = memo((props: any) => {
       })
     }
     dispatch(setBaselinePoints([]));
+    fitBaseline(baselineFitOrder, []);
   }
 
   const selectRange = (e: any) => {
-
-    // const chart = chartComponentRef.current?.chart;
-
-    // console.log(e)
-    // console.log(chart)
-    // console.log("chart option", chart?.options)
 
     const xmin = dataSource?.convert2freq(e.xAxis[0].min, unit);
     const xmax = dataSource?.convert2freq(e.xAxis[0].max, unit);
@@ -127,10 +132,6 @@ const Viewer = memo((props: any) => {
     if (isFitting) {
       fitGaussian(order, [...gaussianGuess, guess]);
     }
-
-    // Fire a custom event
-    // console.log("highchart", Highcharts);
-    // Highcharts.fireEvent(chart, 'selectedpoints', { points: chart?.getSelectedPoints() });
 
     return false; // Don't zoom
   }
@@ -215,7 +216,7 @@ const Viewer = memo((props: any) => {
 
     if (isBaselineFitted === true) {
       baselineData.forEach((item: number[], i: number) => {
-        item[1] = baselineFit[i];
+        item[1] = baselineFitValues[i];
       });
     }
 
@@ -391,8 +392,6 @@ const Viewer = memo((props: any) => {
       if (x >= 0 && y >= 0 && x <= chart.chartWidth && y <= chart.chartHeight) {
         // console.log(chart.xAxis[0].toValue(x, true));
         // console.log(chart.yAxis[0].toValue(chart.plotHeight - y, true));
-        // setCursorX(chart.xAxis[0].toValue(x, true));
-        // setCursorY(chart.yAxis[0].toValue(y, true));
         xPos = chart.xAxis[0].toValue(x, true);
         yPos = chart.yAxis[0].toValue(y, true);
       }
@@ -405,8 +404,6 @@ const Viewer = memo((props: any) => {
   const handleMouseMove = (event: any) => {
     const { xPos, yPos } = getCursorPos(event);
     dispatch(setPosition([xPos, yPos]));
-    // setCursorX(xPos);
-    // setCursorY(yPos);
   };
 
   return (
@@ -417,13 +414,14 @@ const Viewer = memo((props: any) => {
         ref={chartComponentRef}
         containerProps={{
           onMouseMove: handleMouseMove,
-          // onDoubleClick: handleDoubleClick,
         }}
       />
       <Toolbar
         unit={unit}
         setUnit={setUnit}
         dataSource={dataSource}
+        fitBaseline={fitBaseline}
+        fitGaussian={fitGaussian}
         unSelectAllPoints={unSelectAllPoints}
       />
       <Divider />
@@ -434,9 +432,6 @@ const Viewer = memo((props: any) => {
         <BaselineTable height={cardHeight} />
       </Collapse>
       <Collapse isOpen={showGaussianTable}>
-        {/* <Pre>
-          Dummy text.
-        </Pre> */}
         <GaussianTable height={cardHeight} />
       </Collapse>
     </div>
@@ -445,7 +440,7 @@ const Viewer = memo((props: any) => {
 
 
 const BaselineTable = (props: any) => {
-  const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints)
+  const baselinePoints = useSelector((state: RootState) => state.baseline.baselinePoints)
   const pointX = (rowIndex: number) => (
     <Cell>{`${baselinePoints[rowIndex] ? (toSciSymbol(baselinePoints[rowIndex][0])) : 0.0}`}</Cell>
   );

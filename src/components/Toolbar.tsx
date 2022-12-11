@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag } from '../redux/cursorSlice';
-import { setBaselineFit, setShowSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
+import { setBaselineFitOrder, setShowSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
 import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
 import { AnchorButton, Button, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
@@ -9,45 +9,29 @@ import { toSciSymbol } from "../Helper";
 
 const Toolbar = (props: any) => {
   const dispatch = useDispatch();
+
   const position = useSelector((state: RootState) => state.cursor.position);
   const drag = useSelector((state: RootState) => state.cursor.drag);
-  const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints);
-  const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
+
+  const baselinePoints = useSelector((state: RootState) => state.baseline.baselinePoints);
+  const baselineFitValues = useSelector((state: RootState) => state.baseline.baselineFitValues);
+  const baselineFitOrder = useSelector((state: RootState) => state.baseline.baselineFitOrder);
   const showSubtraction = useSelector((state: RootState) => state.baseline.showSubtraction);
-  const isBaselineFitted = baselineFit.length > 0;
-  const xdata = baselinePoints.map((item: number[]) => { return item[0] });
-  const ydata = baselinePoints.map((item: number[]) => { return item[1] });
+  const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
+  const isBaselineFitted = baselineFitValues.length > 0;
 
   const order = useSelector((state: RootState) => state.gaussian.order);
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
-  const dataSource = props.dataSource;
+  const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
+
+  const fitGaussian = props.fitGaussian;
+  const fitBaseline = props.fitBaseline;
+
   const unit = props.unit;
   const setUnit = props.setUnit;
 
   const unSelectAllPoints = props.unSelectAllPoints;
-
-  const fitBaseline = (x: number[], y: number[]) => {
-    const result = dataSource?.fit_baseline(x, y, unit).toJs();
-    const fit = [].slice.call(result);
-    dispatch(setBaselineFit(fit));
-  }
-  const fitGaussian = (order: number) => {
-    const guess = gaussianGuess.map((guess: number[]) => {
-      const [xmin, xmax, ymin, ymax] = guess;
-      const tmp1 = dataSource?.convertfreq(xmin, unit);
-      const tmp2 = dataSource?.convertfreq(xmax, unit);
-      const xmin2 = tmp1 <= tmp2 ? tmp1 : tmp2;
-      const xmax2 = tmp1 <= tmp2 ? tmp2 : tmp1;
-      return [xmin2, xmax2, ymin, ymax];
-    });
-    const result = dataSource?.fit_gaussian(unit, order, guess).toJs();
-    const fit = [].slice.call(result);
-    dispatch(setGaussianFit(fit));
-  }
-
-  const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
-  const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
 
   return (
     <div style={{ display: "flex" }}>
@@ -92,6 +76,27 @@ const Toolbar = (props: any) => {
         </Tooltip2>
       </ButtonGroup>
       <Divider />
+      <Popover2
+        content={
+          <NumericInput
+            style={{ width: 30 }}
+            value={baselineFitOrder}
+            min={1}
+            onValueChange={(value) => {
+              dispatch(setBaselineFitOrder(value));
+              fitBaseline(value, baselinePoints);
+            }}
+          />
+        }
+      >
+        <Tooltip2
+          content="Number of Gaussian peaks"
+          position={Position.TOP_LEFT}
+          minimal={true}
+        >
+          <AnchorButton text={baselineFitOrder} small={true} />
+        </Tooltip2>
+      </Popover2>
       <Tooltip2
         content="Subtraction baseline"
         position={Position.TOP_LEFT}
@@ -105,18 +110,6 @@ const Toolbar = (props: any) => {
             dispatch(setShowSubtraction(!showSubtraction));
             dispatch(setDrag("zoom"));
           }}
-        />
-      </Tooltip2>
-      <Tooltip2
-        content="Fit baseline"
-        position={Position.TOP_LEFT}
-        minimal={true}
-      >
-        <AnchorButton
-          icon="regression-chart"
-          small={true}
-          disabled={!baselinePoints.length}
-          onClick={() => { fitBaseline(xdata, ydata) }}
         />
       </Tooltip2>
       <Tooltip2
@@ -140,7 +133,9 @@ const Toolbar = (props: any) => {
           small={true}
           onClick={() => {
             unSelectAllPoints();
-            fitBaseline([], []);
+            dispatch(setIsFitting(false));
+            dispatch(setGaussianGuess([]));
+            dispatch(setGaussianFit([]));
           }}
         />
       </Tooltip2>
@@ -161,7 +156,7 @@ const Toolbar = (props: any) => {
               dispatch(setGaussianFit([]));
             }
             else {
-              fitGaussian(order);
+              fitGaussian(order, gaussianGuess);
             }
             dispatch(setIsFitting(!isFitting))
           }}
