@@ -2,7 +2,7 @@ import { useEffect, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag, setPosition } from '../redux/cursorSlice';
-import { setDataPoints, setFitValues, setSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
+import { setBaselinePoints, setShowBaselineTable } from '../redux/baselineSlice';
 import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
@@ -25,7 +25,7 @@ const Viewer = memo((props: any) => {
   const drag = useSelector((state: RootState) => state.cursor.drag);
 
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
-  const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
+  const showSubtraction = useSelector((state: RootState) => state.baseline.showSubtraction);
   const showBaselineTable = useSelector((state: RootState) => state.baseline.showBaselineTable);
   const isBaselineFitted = baselineFit.length > 0;
 
@@ -89,7 +89,7 @@ const Viewer = memo((props: any) => {
       (point) => { return [point.x || 0.0, point.y || 0.0] }
     ) || [];
 
-    dispatch(setDataPoints(data));
+    dispatch(setBaselinePoints(data));
 
     // Fire a custom event
     // console.log("highchart", Highcharts);
@@ -105,7 +105,7 @@ const Viewer = memo((props: any) => {
         point.select(false);
       })
     }
-    // dispatch(setDataPoints([]));
+    dispatch(setBaselinePoints([]));
   }
 
   const selectRange = (e: any) => {
@@ -134,23 +134,6 @@ const Viewer = memo((props: any) => {
 
     return false; // Don't zoom
   }
-
-  function unselectByClick() {
-    const points = chart?.getSelectedPoints();
-    if (points?.length && points.length > 0) {
-      points.forEach((point) => {
-        point.select(false);
-      })
-    }
-    dispatch(setDataPoints([]));
-  }
-
-  // const setCursorX = props.setCursorX;
-  // const setCursorY = props.setCursorY;
-
-  // const addBaselinePoints = (point: Array<number>) => {
-  //   setBaselinePoints([...baselinePoints, point]);
-  // };
 
   // TODO: update table when drag and drop
   // const updateBaselinePoints = (oldPoint: Array<number>, newPoint: Array<number>) => {
@@ -204,7 +187,7 @@ const Viewer = memo((props: any) => {
               setGaussianGuess(
                 gaussianGuess.filter(
                   (value: number[], index: number) =>
-                    index !== e.point.series.index - (3 - Number(subtraction))
+                    index !== e.point.series.index - (3 - Number(showSubtraction))
                 )));
           }
         }
@@ -237,7 +220,7 @@ const Viewer = memo((props: any) => {
     }
 
     // create subtracted data if the option is selected
-    if (subtraction === true) {
+    if (showSubtraction === true) {
       const subtractedData = sourceData.map(
         (item: number[], idx: number) => {
           return [item[0], item[1] - baselineData[idx][1]]
@@ -373,7 +356,7 @@ const Viewer = memo((props: any) => {
     options.chart.renderTo = chart?.container;
     options.chart.events = {
       selection: selectPoints,
-      click: unselectByClick,
+      click: unSelectAllPoints,
     };
   }
   else if (drag === "gaussian" && options.chart) {

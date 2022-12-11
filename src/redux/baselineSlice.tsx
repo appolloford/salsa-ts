@@ -3,14 +3,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 export interface BaselineState {
   dataPoints: number[][]
   fitValues: number[]
-  subtraction: boolean
+  showSubtraction: boolean
   showBaselineTable: boolean
 }
 
 const initialState: BaselineState = {
   dataPoints: [],
   fitValues: [],
-  subtraction: false,
+  showSubtraction: false,
   showBaselineTable: false
 }
 
@@ -18,14 +18,14 @@ export const baselineSlice = createSlice({
   name: 'baseline',
   initialState,
   reducers: {
-    setDataPoints: (state, action: PayloadAction<number[][]>) => {
+    setBaselinePoints: (state, action: PayloadAction<number[][]>) => {
       state.dataPoints = action.payload
     },
-    setFitValues: (state, action: PayloadAction<number[]>) => {
+    setBaselineFit: (state, action: PayloadAction<number[]>) => {
       state.fitValues = action.payload
     },
-    setSubtraction: (state, action: PayloadAction<boolean>) => {
-      state.subtraction = action.payload
+    setShowSubtraction: (state, action: PayloadAction<boolean>) => {
+      state.showSubtraction = action.payload
     },
     setShowBaselineTable: (state, action: PayloadAction<boolean>) => {
       state.showBaselineTable = action.payload
@@ -34,6 +34,6 @@ export const baselineSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { setDataPoints, setFitValues, setSubtraction, setShowBaselineTable } = baselineSlice.actions
+export const { setBaselinePoints, setBaselineFit, setShowSubtraction, setShowBaselineTable } = baselineSlice.actions
 
 export default baselineSlice.reducer

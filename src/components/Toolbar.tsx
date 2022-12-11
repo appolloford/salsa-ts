@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag } from '../redux/cursorSlice';
-import { setDataPoints, setFitValues, setSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
+import { setBaselineFit, setShowSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
 import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
 import { AnchorButton, Button, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
@@ -13,7 +13,7 @@ const Toolbar = (props: any) => {
   const drag = useSelector((state: RootState) => state.cursor.drag);
   const baselinePoints = useSelector((state: RootState) => state.baseline.dataPoints);
   const baselineFit = useSelector((state: RootState) => state.baseline.fitValues);
-  const subtraction = useSelector((state: RootState) => state.baseline.subtraction);
+  const showSubtraction = useSelector((state: RootState) => state.baseline.showSubtraction);
   const isBaselineFitted = baselineFit.length > 0;
   const xdata = baselinePoints.map((item: number[]) => { return item[0] });
   const ydata = baselinePoints.map((item: number[]) => { return item[1] });
@@ -30,7 +30,7 @@ const Toolbar = (props: any) => {
   const fitBaseline = (x: number[], y: number[]) => {
     const result = dataSource?.fit_baseline(x, y, unit).toJs();
     const fit = [].slice.call(result);
-    dispatch(setFitValues(fit));
+    dispatch(setBaselineFit(fit));
   }
   const fitGaussian = (order: number) => {
     const guess = gaussianGuess.map((guess: number[]) => {
@@ -73,7 +73,7 @@ const Toolbar = (props: any) => {
             icon="widget-button"
             small={true}
             active={drag === "baseline"}
-            disabled={subtraction}
+            disabled={showSubtraction}
             onClick={() => { dispatch(setDrag("baseline")) }}
           />
         </Tooltip2>
@@ -86,7 +86,7 @@ const Toolbar = (props: any) => {
             icon="widget"
             small={true}
             active={drag === "gaussian"}
-            disabled={!isBaselineFitted || !subtraction}
+            disabled={!isBaselineFitted || !showSubtraction}
             onClick={() => { dispatch(setDrag("gaussian")) }}
           />
         </Tooltip2>
@@ -100,9 +100,9 @@ const Toolbar = (props: any) => {
         <AnchorButton
           icon="bring-data"
           small={true}
-          active={subtraction}
+          active={showSubtraction}
           onClick={() => {
-            dispatch(setSubtraction(!subtraction));
+            dispatch(setShowSubtraction(!showSubtraction));
             dispatch(setDrag("zoom"));
           }}
         />
@@ -140,7 +140,6 @@ const Toolbar = (props: any) => {
           small={true}
           onClick={() => {
             unSelectAllPoints();
-            dispatch(setDataPoints([]));
             fitBaseline([], []);
           }}
         />
@@ -156,7 +155,7 @@ const Toolbar = (props: any) => {
           icon="timeline-bar-chart"
           small={true}
           active={isFitting}
-          disabled={!baselinePoints.length || !subtraction}
+          disabled={!baselinePoints.length || !showSubtraction}
           onClick={() => {
             if (isFitting) {
               dispatch(setGaussianFit([]));
