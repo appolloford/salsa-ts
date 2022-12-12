@@ -480,7 +480,9 @@ const BaselineTable = (props: any) => {
 }
 
 const GaussianTable = (props: any) => {
+  const ngauss = useSelector((state: RootState) => state.gaussian.order);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
+  const gaussianParams = useSelector((state: RootState) => state.gaussian.gaussianParams);
 
   const rangeX = (rowIndex: number) => (
     <Cell>
@@ -494,13 +496,28 @@ const GaussianTable = (props: any) => {
       {` ${gaussianGuess[rowIndex] ? (toSciSymbol(gaussianGuess[rowIndex][3])) : 0.0}`})
     </Cell>
   );
+  const mean = (rowIndex: number) => (
+    <Cell>{`${gaussianParams[rowIndex] ? (toSciSymbol(gaussianParams[rowIndex][0])) : 0.0}`}</Cell>
+  )
+  const sigma = (rowIndex: number) => (
+    <Cell>{`${gaussianParams[rowIndex] ? (toSciSymbol(gaussianParams[rowIndex][1])) : 0.0}`}</Cell>
+  )
+  const amplitude = (rowIndex: number) => (
+    <Cell>{`${gaussianParams[rowIndex] ? (toSciSymbol(gaussianParams[rowIndex][2])) : 0.0}`}</Cell>
+  )
+
+  const nrows = ngauss > gaussianGuess.length ? ngauss : gaussianGuess.length;
   return (
     <Card style={{ display: "block", overflow: "auto", height: props.height }}>
       Constraints:
-      <Table2 numRows={gaussianGuess.length} enableGhostCells={true} columnWidths={[400, 400]}>
+      {/* <Table2 numRows={nrows} enableGhostCells={true}> */}
+      <Table2 numRows={nrows} enableGhostCells={true} columnWidths={[400, 400, 150, 150, 150]}>
         {/* <Table2 numRows={gaussianGuess.length} enableGhostCells={true}> */}
         <Column name="X range" cellRenderer={rangeX} />
         <Column name="Y range" cellRenderer={rangeY} />
+        <Column name="mean" cellRenderer={mean} />
+        <Column name="sigma" cellRenderer={sigma} />
+        <Column name="amplitude" cellRenderer={amplitude} />
       </Table2>
     </Card>
   )
