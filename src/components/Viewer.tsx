@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setPosition } from '../redux/cursorSlice';
 import { setBaselinePoints, setBaselineFit } from '../redux/baselineSlice';
-import { setGaussianGuess, setGaussianFit } from '../redux/gaussianSlice';
+import { setGaussianGuess, setGaussianParams, setGaussianSingleFit, setGaussianStack } from '../redux/gaussianSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import HC_more from 'highcharts/highcharts-more';
@@ -33,7 +33,9 @@ const Viewer = memo((props: any) => {
   const order = useSelector((state: RootState) => state.gaussian.order);
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
-  const gaussianFit = useSelector((state: RootState) => state.gaussian.fit);
+  const gaussianSingleFit = useSelector((state: RootState) => state.gaussian.gaussianSingleFit);
+  const gaussianStack = useSelector((state: RootState) => state.gaussian.gaussianStack);
+  const showGaussianSingles = useSelector((state: RootState) => state.gaussian.showGaussianSingles);
   const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
 
   const cardHeight = 250 / (Number(showBaselineTable) + Number(showGaussianTable));
@@ -54,7 +56,7 @@ const Viewer = memo((props: any) => {
     dispatch(setBaselineFit(fit));
   }
 
-  const fitGaussian = (order: number, guess: number[][]) => {
+  const fitGaussian = (baseline: number[], order: number, guess: number[][]) => {
     const guessInCurrentUnit = guess.map((g: number[]) => {
       const [xmin, xmax, ymin, ymax] = g;
       const tmp1 = dataSource?.convertfreq(xmin, unit);
@@ -63,9 +65,13 @@ const Viewer = memo((props: any) => {
       const xmax2 = tmp1 <= tmp2 ? tmp2 : tmp1;
       return [xmin2, xmax2, ymin, ymax];
     });
-    const result = dataSource?.fit_gaussian(unit, order, guessInCurrentUnit).toJs();
-    const fit = [].slice.call(result);
-    dispatch(setGaussianFit(fit));
+    const result = dataSource?.fit_gaussian(unit, baseline, order, guessInCurrentUnit).toJs();
+    const stack = [].slice.call(result[0]);
+    const singlefit = result[1].map((g: number[]) => [].slice.call(g));
+    const params = result[2].map((p: number[]) => [].slice.call(p));
+    dispatch(setGaussianStack(stack));
+    dispatch(setGaussianParams(params));
+    dispatch(setGaussianSingleFit(singlefit));
   }
 
   const selectPoints = (e: any) => {
@@ -130,7 +136,7 @@ const Viewer = memo((props: any) => {
     dispatch(setGaussianGuess([...gaussianGuess, guess]));
 
     if (isFitting) {
-      fitGaussian(order, [...gaussianGuess, guess]);
+      fitGaussian(baselineFitValues, order, [...gaussianGuess, guess]);
     }
 
     return false; // Don't zoom
@@ -264,28 +270,10 @@ const Viewer = memo((props: any) => {
           type: 'line',
           data: baselineData,
           allowPointSelect: false,
-          colorIndex: 3,
+          colorIndex: 1,
         })
       }
       console.log("series", options.series);
-    }
-
-    if (gaussianFit) {
-      const gaussian = xdataArray.map((xi: number, i: number) => {
-        return [xi, 0.0];
-      });
-      gaussian.forEach((item: number[], i: number) => {
-        item[1] = gaussianFit[i];
-      });
-      options.series.push(
-        {
-          name: 'Gaussian',
-          type: 'line',
-          data: gaussian,
-          findNearestPointBy: 'xy',
-          colorIndex: 5,
-        },
-      );
     }
 
     if (gaussianGuess) {
@@ -297,12 +285,45 @@ const Viewer = memo((props: any) => {
           name: `Peak ${index + 1}`,
           type: 'polygon',
           data: [[xmin2, ymin], [xmax2, ymin], [xmax2, ymax], [xmin2, ymax]],
-          color: 'green',
+          colorIndex: 2,
           opacity: 0.5
         }
         return data;
       });
       if (series) options.series = [...options.series, ...series];
+    }
+
+    if (gaussianStack) {
+      const gaussian = xdataArray.map((xi: number, i: number) => {
+        return [xi, gaussianStack[i]];
+      });
+      options.series.push(
+        {
+          name: 'Gaussian',
+          type: 'line',
+          data: gaussian,
+          findNearestPointBy: 'xy',
+          colorIndex: 3,
+        },
+      );
+    }
+
+    if (gaussianSingleFit && showGaussianSingles) {
+      const singles = gaussianSingleFit.map((single: number[]) => {
+        return single.map((yi: number, i: number) => {
+          return [xdataArray[i], yi];
+        })
+      });
+      singles.forEach((item: number[][], i: number) => {
+        options.series?.push(
+          {
+            name: `Gaussian Component ${i}`,
+            type: 'area',
+            data: item,
+            colorIndex: 4 + i,
+          }
+        )
+      })
     }
 
     // options.series = [

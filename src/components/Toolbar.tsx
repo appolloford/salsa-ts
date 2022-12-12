@@ -2,7 +2,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store';
 import { setDrag } from '../redux/cursorSlice';
 import { setBaselineFitOrder, setShowSubtraction, setShowBaselineTable } from '../redux/baselineSlice';
-import { setOrder, setIsFitting, setGaussianGuess, setGaussianFit, setShowGaussianTable } from '../redux/gaussianSlice';
+import { setOrder, setIsFitting, setGaussianGuess, setGaussianStack, setShowGaussianSingles, setShowGaussianTable } from '../redux/gaussianSlice';
 import { AnchorButton, Button, Classes, ButtonGroup, Divider, FormGroup, HTMLSelect, NumericInput, Position } from '@blueprintjs/core';
 import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { toSciSymbol } from "../Helper";
@@ -23,6 +23,7 @@ const Toolbar = (props: any) => {
   const order = useSelector((state: RootState) => state.gaussian.order);
   const isFitting = useSelector((state: RootState) => state.gaussian.isFitting);
   const gaussianGuess = useSelector((state: RootState) => state.gaussian.guess);
+  const showGaussianSingles = useSelector((state: RootState) => state.gaussian.showGaussianSingles);
   const showGaussianTable = useSelector((state: RootState) => state.gaussian.showGaussianTable);
 
   const fitGaussian = props.fitGaussian;
@@ -135,7 +136,7 @@ const Toolbar = (props: any) => {
             unSelectAllPoints();
             dispatch(setIsFitting(false));
             dispatch(setGaussianGuess([]));
-            dispatch(setGaussianFit([]));
+            dispatch(setGaussianStack([]));
           }}
         />
       </Tooltip2>
@@ -153,12 +154,28 @@ const Toolbar = (props: any) => {
           disabled={!baselinePoints.length || !showSubtraction}
           onClick={() => {
             if (isFitting) {
-              dispatch(setGaussianFit([]));
+              dispatch(setGaussianStack([]));
             }
             else {
-              fitGaussian(order, gaussianGuess);
+              fitGaussian(baselineFitValues, order, gaussianGuess);
             }
             dispatch(setIsFitting(!isFitting))
+          }}
+        />
+      </Tooltip2>
+      <Tooltip2
+        className={Classes.TOOLTIP_INDICATOR}
+        content="Show Gaussian by each"
+        position={Position.TOP_LEFT}
+        minimal={true}
+      >
+        <AnchorButton
+          icon="stacked-chart"
+          small={true}
+          active={showGaussianSingles}
+          disabled={!baselinePoints.length || !showSubtraction}
+          onClick={() => {
+            dispatch(setShowGaussianSingles(!showGaussianSingles))
           }}
         />
       </Tooltip2>
@@ -170,7 +187,9 @@ const Toolbar = (props: any) => {
             min={0}
             onValueChange={(value) => {
               dispatch(setOrder(value));
-              if (isFitting) fitGaussian(value);
+              if (isFitting) {
+                fitGaussian(baselineFitValues, value, gaussianGuess);
+              }
             }}
           />
         }
@@ -205,7 +224,7 @@ const Toolbar = (props: any) => {
           onClick={() => {
             dispatch(setIsFitting(false));
             dispatch(setGaussianGuess([]));
-            dispatch(setGaussianFit([]));
+            dispatch(setGaussianStack([]));
           }}
         />
       </Tooltip2>
