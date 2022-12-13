@@ -1,13 +1,9 @@
 import numpy as np
 
-from io import BytesIO
 from js import jsarray
-
+from io import BytesIO
 from astropy.io import fits
 from scipy.optimize import curve_fit
-
-# from scipy.optimize import curve_fit
-# #? fit gaussian: https://stackoverflow.com/questions/11507028/fit-a-gaussian-function
 
 clight = 299792458
 

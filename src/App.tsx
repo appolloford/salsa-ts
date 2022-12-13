@@ -19,7 +19,7 @@ declare global { // <- [reference](https://stackoverflow.com/a/56458070/11542903
 
 const pyodideInstance = async () => {
   const pyodide = await window.loadPyodide({
-    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/"
   });
   await pyodide.loadPackage(["astropy", "scipy"]);
   // await pyodide.loadPackage("astropy")
