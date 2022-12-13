@@ -90,7 +90,7 @@ function App() {
     <div className="App">
       <Navbar>
         <NavbarGroup align={Alignment.LEFT}>
-          <NavbarHeading>SalsaTS</NavbarHeading>
+          <NavbarHeading>SalsaTS <small><sup>{process.env.REACT_APP_VERSION}</sup></small></NavbarHeading>
           <NavbarDivider />
           <Button disabled={!pyodideLoaded} minimal={true}>
             <label htmlFor="input">

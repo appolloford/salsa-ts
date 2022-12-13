@@ -12,10 +12,32 @@ class SALSASource:
     def __init__(self, bytesfile) -> None:
         self.content = fits.open(BytesIO(bytesfile), mode="readonly")
 
-    def _single_gaussian(self, x: np.ndarray, mean: float, sigma: float, amp: float) -> float:
+    def _single_gaussian(self, x: np.ndarray, mean: float, sigma: float, amp: float) -> np.ndarray:
+        """
+        Function to create a gaussian profile G(x)
+
+        Args:
+            x (np.ndarray): input x
+            mean (float): mean of the gaussian
+            sigma (float): standard deviation of the gaussian
+            amp (float): amplitude of the gaussian
+
+        Returns:
+            np.ndarray: the profile of the function
+        """
         return amp * np.exp( -(x-mean)**2 / (2*sigma**2) )
 
-    def _gaussian_stack(self, x, *params) -> float:
+    def _gaussian_stack(self, x: np.ndarray, *params) -> np.ndarray:
+        """
+        Function to create multiple gaussian combination
+
+        Args:
+            x (np.ndarray): input x
+            params: gaussian parameters in the order of mean, sigma, and amp
+
+        Returns:
+            np.ndarray: the profile of the function
+        """
         y = np.zeros_like(x)
         for i in range(0, len(params), 3):
             mean, sigma, amp = params[i], params[i+1], params[i+2]
@@ -24,11 +46,23 @@ class SALSASource:
 
     @property
     def header(self) -> dict:
+        """
+        Header of the input fits file
+
+        Returns:
+            dict: dictionary of the fits header
+        """
         header = self.content[0].header
         return dict(header)
 
     @property
     def rawdata(self) -> list:
+        """
+        Raw data saved in the fits file
+
+        Returns:
+            list: raw data
+        """
         return self.content[0].data.tolist()
 
     def axisdata(self, idx: int, unit: str = None) -> np.ndarray:
@@ -223,12 +257,5 @@ class SALSASource:
 
         return ret
 
-# if __name__ == "__main__":
-#     array = jsarray.to_py().tobytes()
-#     print("in main", array)
-#     fitsreader = FitsReader(array)
-#     FitsReader(array)
-
 array = jsarray.to_py().tobytes()
 salsa = SALSASource(array)
-# FitsReader(array)
