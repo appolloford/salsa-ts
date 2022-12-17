@@ -1,13 +1,9 @@
 import numpy as np
 
-from io import BytesIO
 from js import jsarray
-
+from io import BytesIO
 from astropy.io import fits
 from scipy.optimize import curve_fit
-
-# from scipy.optimize import curve_fit
-# #? fit gaussian: https://stackoverflow.com/questions/11507028/fit-a-gaussian-function
 
 clight = 299792458
 
@@ -16,10 +12,32 @@ class SALSASource:
     def __init__(self, bytesfile) -> None:
         self.content = fits.open(BytesIO(bytesfile), mode="readonly")
 
-    def _single_gaussian(self, x: np.ndarray, mean: float, sigma: float, amp: float) -> float:
+    def _single_gaussian(self, x: np.ndarray, mean: float, sigma: float, amp: float) -> np.ndarray:
+        """
+        Function to create a gaussian profile G(x)
+
+        Args:
+            x (np.ndarray): input x
+            mean (float): mean of the gaussian
+            sigma (float): standard deviation of the gaussian
+            amp (float): amplitude of the gaussian
+
+        Returns:
+            np.ndarray: the profile of the function
+        """
         return amp * np.exp( -(x-mean)**2 / (2*sigma**2) )
 
-    def _gaussian_stack(self, x, *params) -> float:
+    def _gaussian_stack(self, x: np.ndarray, *params) -> np.ndarray:
+        """
+        Function to create multiple gaussian combination
+
+        Args:
+            x (np.ndarray): input x
+            params: gaussian parameters in the order of mean, sigma, and amp
+
+        Returns:
+            np.ndarray: the profile of the function
+        """
         y = np.zeros_like(x)
         for i in range(0, len(params), 3):
             mean, sigma, amp = params[i], params[i+1], params[i+2]
@@ -28,14 +46,40 @@ class SALSASource:
 
     @property
     def header(self) -> dict:
+        """
+        Header of the input fits file
+
+        Returns:
+            dict: dictionary of the fits header
+        """
         header = self.content[0].header
         return dict(header)
 
     @property
-    def rawdata(self) -> list:
+    def rawdata(self) -> list[float]:
+        """
+        Raw data saved in the fits file
+
+        Returns:
+            list[float]: raw data
+        """
         return self.content[0].data.tolist()
 
     def axisdata(self, idx: int, unit: str = None) -> np.ndarray:
+        """
+        Get the data of one axis. Do unit conversion if needed
+
+        Args:
+            idx (int): The index of the axis
+            unit (str, optional): The unit of the data. Defaults to None.
+
+        Raises:
+            RuntimeError: if the index is out of the range of the data dimension
+            RuntimeError: the unit doesn't match with the target axis
+
+        Returns:
+            np.ndarray: the data of the axis
+        """
         if idx > self.header.get("NAXIS"):
             raise RuntimeError(f"Input index {idx} is higher than the dimension")
 
@@ -82,30 +126,55 @@ class SALSASource:
         self,
         xdata: list[float],
         ydata: list[float],
-        unit: str = None,
+        frequnit: str = None,
         deg: float = 2,
     ) -> np.ndarray:
+        """
+        Fit a polynomial baseline to the input data
+
+        Args:
+            xdata (list[float]): input x (frequency axis)
+            ydata (list[float]): input y
+            frequnit (str, optional): the unit of frequency (x). Defaults to None.
+            deg (float, optional): the order of the polynomial. Defaults to 2.
+
+        Returns:
+            np.ndarray: the baseline data (y_fit)
+        """
 
         if not xdata or not ydata:
             return []
 
-        else:
-            poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
-            x = self.axisdata(1, unit=unit)
-            return np.polyval(poly, x)
-            # self._baseline = {xi: yi for xi, yi in zip(x, y)}
-            # self._baseline = np.array([[xi, yi] for xi, yi in zip(x, y)])
-            # ? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
+        # ? error: https://stackoverflow.com/questions/15721053/whats-the-error-of-numpy-polyfit
+        poly = np.polyfit(xdata.to_py(), ydata.to_py(), deg=deg)
+        x = self.axisdata(1, unit=frequnit)
+        return np.polyval(poly, x)
 
     def fit_gaussian(
         self, 
-        unit: str = None, 
+        frequnit: str = None, 
         baseline: list[float] = None, 
         ngaussian: int = 0, 
         xylim: list[list[float]] = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, list[np.ndarray], list[list[float]]]:
+        """
+        Fit multiple gaussian functions to the data. `xylim` is in the format of
+        `[xmin, xmax, ymin, ymax]`. If `xylim` is provided, the mean, standard  
+        deviation, and amplitude of the gaussian will be limited in `[xmin, xmax]`,
+        `[0, 2*(xmax-xmin)]`, and `[ymin, 2*ymax]`. Otherwise, the default constraints
+        are `[xmin, xmax]`, `[0, xmax-xmin]`, `[0.5*ymin, 2*ymax]`.
 
-        xdata = self.axisdata(1, unit=unit)
+        Args:
+            frequnit (str, optional): the unit of frequency (x). Defaults to None.
+            baseline (list[float], optional): the fitted baseline. Defaults to None.
+            ngaussian (int, optional): the number of gaussians to fit. Defaults to 0.
+            xylim (list[list[float]], optional): limitation to the gaussians. Defaults to None.
+
+        Returns:
+            tuple[np.ndarray, list[np.ndarray], list[list[float]]]: _description_
+        """
+
+        xdata = self.axisdata(1, unit=frequnit)
 
         if not ngaussian:
             return np.zeros(xdata.shape), [], []
@@ -227,12 +296,5 @@ class SALSASource:
 
         return ret
 
-# if __name__ == "__main__":
-#     array = jsarray.to_py().tobytes()
-#     print("in main", array)
-#     fitsreader = FitsReader(array)
-#     FitsReader(array)
-
 array = jsarray.to_py().tobytes()
 salsa = SALSASource(array)
-# FitsReader(array)
